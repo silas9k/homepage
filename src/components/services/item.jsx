@@ -18,6 +18,7 @@ import ProxmoxVM from "widgets/proxmoxvm/component";
 export default function Item({ service, groupName, useEqualHeights }) {
   const hasLink = service.href && service.href !== "#";
   const { settings } = useContext(SettingsContext);
+  const isSilasLauncher = settings.silasTheme && hasLink;
   const showStats = service.showStats === false ? false : settings.showStats;
   const statusStyle = service.statusStyle !== undefined ? service.statusStyle : settings.statusStyle;
   const cardStyle =
@@ -38,19 +39,47 @@ export default function Item({ service, groupName, useEqualHeights }) {
     }
   };
 
+  const openService = () => {
+    const target = service.target ?? settings.target ?? "_blank";
+    if (target === "_self") {
+      window.location.assign(service.href);
+      return;
+    }
+    window.open(service.href, target, "noopener,noreferrer");
+  };
+
+  const handleCardClick = (event) => {
+    if (!isSilasLauncher) return;
+    if (event.target.closest("a, button, input, select, textarea, [role=button], [data-service-card-control]")) return;
+    openService();
+  };
+
+  const handleCardKeyDown = (event) => {
+    if (!isSilasLauncher || !["Enter", " ", "Spacebar"].includes(event.key)) return;
+    event.preventDefault();
+    openService();
+  };
+
   return (
     <li key={service.name} id={service.id} className="service" data-name={service.name || ""}>
       <div
+        role={isSilasLauncher ? "link" : undefined}
+        tabIndex={isSilasLauncher ? 0 : undefined}
+        aria-label={isSilasLauncher ? `${service.name} öffnen` : undefined}
+        data-href={isSilasLauncher ? service.href : undefined}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
         className={classNames(
           settings.cardBlur !== undefined && `backdrop-blur${settings.cardBlur.length ? "-" : ""}${settings.cardBlur}`,
           useEqualHeights && "h-[calc(100%-0.5rem)]",
           cardStyle,
           "transition-all mb-2 p-1 rounded-md font-medium text-theme-700 dark:text-theme-200 dark:hover:text-theme-300 bg-theme-100/20 hover:bg-theme-300/20 dark:bg-white/5 dark:hover:bg-white/10 relative overflow-clip service-card",
+          isSilasLauncher && "silas-launcher",
         )}
       >
         <div className="flex select-none z-0 service-title">
           {service.icon &&
-            (hasLink ? (
+            (hasLink && !settings.silasTheme ? (
               <a
                 href={service.href}
                 target={service.target ?? settings.target ?? "_blank"}
@@ -66,7 +95,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
               </div>
             ))}
 
-          {hasLink ? (
+          {hasLink && !settings.silasTheme ? (
             <a
               href={service.href}
               target={service.target ?? settings.target ?? "_blank"}

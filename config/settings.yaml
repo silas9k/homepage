@@ -25,7 +25,7 @@ quicklaunch:
 layout:
   Server:
     style: row
-    columns: 3
+    columns: 2
   Cloud & Dokumente:
     style: row
     columns: 3
@@ -34,16 +34,16 @@ layout:
     columns: 3
   Smart Home:
     style: row
-    columns: 3
+    columns: 2
   Gaming:
     style: row
-    columns: 3
+    columns: 2
   Verwaltung & Netzwerk:
     style: row
     columns: 3
   Backups:
     style: row
-    columns: 3
+    columns: 2
 silasSites:
   a: HOME A
   b: HOME B

@@ -72,7 +72,7 @@ Ein Widget wird erst aktiv, wenn sämtliche in `silasRequired` genannten Felder 
 - `config/widgets.yaml`, `bookmarks.yaml`, `docker.yaml`, `proxmox.yaml`, `kubernetes.yaml`: bewusst leere, gültige Startkonfiguration.
 - `public/silas/`: lokal ausgelieferte Icons und Favicon.
 
-Alle elf Referenzbilder wurden geprüft; persönliche Inhalte aus den Vorlagen sind nicht übernommen. API-Anfragen erfolgen frühestens alle 60 Sekunden pro Widget-Endpunkt; HTTP-Prüfungen alle 30 Sekunden. Ohne API-Konfiguration gibt es keine Widget-Abfragen. Die Suche öffnet konfigurierte Dienste: Suchknopf fokussieren und Enter drücken oder auf der Seite tippen, dann Pfeiltasten/Enter; Escape schließt sie. Nicht konfigurierte Dienste haben keinen ausführbaren Link.
+Alle elf Referenzbilder wurden geprüft; persönliche Inhalte aus den Vorlagen sind nicht übernommen. API-Anfragen erfolgen frühestens alle 60 Sekunden pro Widget-Endpunkt; HTTP-Prüfungen alle 30 Sekunden. Ohne API-Konfiguration gibt es keine Widget-Abfragen. Jede konfigurierte Dienstkarte ist selbst ein Launcher und öffnet ihr Ziel standardmäßig in einem neuen Tab; Tab fokussiert die Karte, Enter oder Leertaste öffnet sie. Echte innere Buttons/Widgets bleiben eigenständig bedienbar. Nicht konfigurierte Dienste haben keinen ausführbaren Link und zeigen `Nicht konfiguriert`.
 
 ## Aktualisieren und zurückrollen
 

@@ -7,12 +7,12 @@ Stand: 09.10.2026. Ausschließlich `C:\Users\silas\IdeaProjects\silas-homepage` 
 | Dependencies                              | Frozen pnpm-Lockfile installiert; Playwright als Dev-Abhängigkeit                                                             |
 | Prettier                                  | Alle geänderten unterstützten Textdateien bestanden; `.env`/Shell ohne Prettier-Parser separat geprüft                        |
 | `pnpm lint`                               | Bestanden, Exit 0; zusätzliche neue/migrierte Dateien ebenfalls geprüft                                                       |
-| `pnpm exec vitest run --maxWorkers=4`     | **570 Testdateien, 1.792 Tests bestanden**                                                                                    |
+| `pnpm exec vitest run --maxWorkers=4`     | **570 Testdateien, 1.794 Tests bestanden**                                                                                    |
 | Nach Verschieben der zwei API-Testdateien | Beide am neuen Ort erneut geprüft: **24 Tests bestanden**                                                                     |
 | `pnpm build`                              | **Bestanden**, optimierter Next-Standalone-Build                                                                              |
 | Typprüfung                                | Next-Build-Prüfschritt erfolgreich; Upstream ist JavaScript, kein separater `typecheck`-Task/TS-Projekt vorhanden             |
 | Produktionsstart                          | Standalone-Server unter `http://127.0.0.1:3100`, Healthcheck erfolgreich                                                      |
-| Playwright am Produktionsserver           | **7 Tests bestanden**; 1920×1080, 1440×900, 768×1024, 390×844                                                                 |
+| Playwright am Produktionsserver           | **8 Tests bestanden**; 1920×1080, 1440×900, 768×1024, 390×844                                                                 |
 | Suche / Layout                            | Tastaturöffnung, Filter, Escape/Fokusrückgabe, lokale Icons, 19 Karten, kein horizontaler Überlauf, untere Backups erreichbar |
 | Leer-/Fehlerzustände                      | Keine Widget-Polls ohne Credentials; echte Nullwerte und Backendfehler mit isolierten Test-Fixtures geprüft                   |
 | API-Schutz                                | Credentials nicht in Browser-Konfiguration, unbekannter Host abgewiesen, beide ehemaligen Testrouten liefern 404              |
@@ -21,6 +21,7 @@ Stand: 09.10.2026. Ausschließlich `C:\Users\silas\IdeaProjects\silas-homepage` 
 | Shell                                     | `setup.sh` und `smoke.sh` Syntax geprüft                                                                                      |
 | Geheimnisse                               | Nur leere/klare Beispielwerte; verschachtelte `.env`, private Schlüssel, Referenzen und lokale Artefakte ignoriert            |
 | Visuelle QA                               | Alle elf gelieferten Referenzen analysiert; finale obere/untere Ansichten der vier Größen betrachtet und Raster nachgebessert |
+| Karten-Launcher und finale Skalierung     | Konfigurierte Karten vollständig klickbar; neue 1920×1080-, 1440×900-, 768×1024- und 390×844-Aufnahmen geprüft                |
 
 Der finale Build meldet die bereits vorhandene Next-Warnung zur `middleware`-Dateikonvention. Es wurde keine warnende neue Middleware eingeführt. Upstream-Vitest meldet Hinweise zu esbuild/oxc und zwei vorhandenen `vi.unmock`-Positionen; sie verursachen keine Testfehler. Playwright meldet den Umgebungs-Hinweis zu NO_COLOR/FORCE_COLOR. Diese Hinweise sind keine verschwiegenen fehlerfreien Warnungsprüfungen.
 
@@ -34,6 +35,8 @@ Lokal unter `artifacts/` (absichtlich nicht committed):
 - `dashboard-full-page.png`: gesamter Inhalt mit 1920 px Breite
 - `dashboard-1440x900.png`, `dashboard-768x1024.png`, `dashboard-390x844.png`
 - `dashboard-bottom-*.png`: untere Bereiche auf allen vier Größen
+
+Die finale Kartenprüfung deckt Proxmox, beide Hosts, Nextcloud, Memos, Vaultwarden, Palmr, Immich, Jellyfin, Home Assistant, beide Homebridge-Instanzen, Crafty, Portainer, Tailscale, Cloudflare Tunnel und Resticwatch ab. Sie setzt ausschließlich lokale Test-Ziele ein und prüft Maus, Enter und Leertaste; produktive URLs oder Browserseiten werden nicht aufgerufen.
 
 Compose-Prüfung reproduzieren: `node deploy/validate-compose.mjs` mit installierter Docker-CLI/Compose. Alternativ `COMPOSE_BINARY` auf ein eigenständiges Compose-Binary setzen. Das Skript lädt ausschließlich Beispielwerte, prüft den offiziellen Immich-Download und startet keine Container.
 

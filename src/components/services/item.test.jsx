@@ -107,6 +107,59 @@ describe("components/services/item", () => {
     expect(screen.getByTestId("resolved-icon")).toBeInTheDocument();
   });
 
+  it("turns a configured Silas card into a complete keyboard launcher", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "My Service",
+          description: "Desc",
+          href: "https://service.example.test",
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    const card = screen.getByRole("link", { name: "My Service öffnen" });
+    expect(card).toHaveAttribute("data-href", "https://service.example.test");
+    expect(card).toHaveAttribute("tabindex", "0");
+    fireEvent.click(card);
+    fireEvent.keyDown(card, { key: "Enter" });
+    fireEvent.keyDown(card, { key: " " });
+    expect(open).toHaveBeenCalledTimes(3);
+    expect(open).toHaveBeenLastCalledWith("https://service.example.test", "_blank", "noopener,noreferrer");
+    open.mockRestore();
+  });
+
+  it("does not launch a Silas card when an inner button is used", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "My Service",
+          description: "Desc",
+          href: "https://service.example.test",
+          container: "c",
+          server: "s",
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "View container stats" }));
+    expect(screen.getByTestId("docker-widget")).toBeInTheDocument();
+    expect(open).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
   it("toggles container stats on click when stats are hidden by default", () => {
     renderWithProviders(
       <Item

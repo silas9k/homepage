@@ -27,11 +27,17 @@ for (const [width, height] of [
     expect(await page.locator("#inner_wrapper").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
       true,
     );
-    expect(
-      await page
-        .locator(".service-icon img")
-        .evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0)),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        page.locator(".service-icon img").evaluateAll((images) => {
+          const visible = images.filter((image) => {
+            const bounds = image.getBoundingClientRect();
+            return bounds.bottom > 0 && bounds.top < window.innerHeight;
+          });
+          return visible.length > 0 && visible.every((image) => image.complete && image.naturalWidth > 0);
+        }),
+      )
+      .toBe(true);
     expect(widgetRequests).toEqual([]);
     expect(errors).toEqual([]);
     await page.screenshot({ path: `artifacts/dashboard-${width}x${height}.png`, fullPage: width < 1000 });
@@ -71,6 +77,65 @@ test("health, config privacy and host validation", async ({ request }) => {
   for (const path of ["/api/services/proxy.test", "/api/mcp/index.test"]) {
     expect((await request.get(path)).status()).toBe(404);
   }
+});
+
+test("configured service cards launch their configured destination from the complete card", async ({
+  page,
+  request,
+}) => {
+  const groups = await (await request.get("/api/services")).json();
+  const destinations = Object.fromEntries(
+    [
+      "Proxmox",
+      "debian-docker",
+      "raspi",
+      "Nextcloud",
+      "Memos",
+      "Vaultwarden",
+      "Palmr",
+      "Immich",
+      "Jellyfin",
+      "Home Assistant",
+      "Homebridge · Standort A",
+      "Homebridge · Standort B",
+      "Crafty Controller",
+      "Portainer",
+      "Tailscale",
+      "Cloudflare Tunnel",
+      "Resticwatch",
+    ].map((name) => [name, `http://127.0.0.1:3100/launcher/${encodeURIComponent(name)}`]),
+  );
+  for (const group of groups) {
+    for (const service of group.services) {
+      if (destinations[service.name]) service.href = destinations[service.name];
+    }
+  }
+  await page.route("**/api/services", (route) => route.fulfill({ json: groups }));
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  for (const [name, url] of Object.entries(destinations)) {
+    const card = page.locator(`.service[data-name="${name}"] .service-card`);
+    await expect(card).toHaveAttribute("data-href", url);
+    await expect(card).toHaveAttribute("tabindex", "0");
+    const popup = page.waitForEvent("popup");
+    await card.click({ position: { x: 12, y: 12 } });
+    const launched = await popup;
+    await expect.poll(() => launched.url()).toBe(url);
+    await launched.close();
+  }
+
+  const keyboardCard = page.locator('.service[data-name="Memos"] .service-card');
+  await keyboardCard.focus();
+  const enterPopup = page.waitForEvent("popup");
+  await keyboardCard.press("Enter");
+  const launchedEnter = await enterPopup;
+  await expect.poll(() => launchedEnter.url()).toBe(destinations.Memos);
+  await launchedEnter.close();
+  const spacePopup = page.waitForEvent("popup");
+  await keyboardCard.press("Space");
+  const launchedSpace = await spacePopup;
+  await expect.poll(() => launchedSpace.url()).toBe(destinations.Memos);
+  await launchedSpace.close();
 });
 
 for (const fail of [false, true]) {
