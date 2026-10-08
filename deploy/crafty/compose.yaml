@@ -1,0 +1,20 @@
+name: silas-crafty
+services:
+  crafty:
+    image: ${CRAFTY_IMAGE:-arcadiatechnology/crafty-4:4.11.0@sha256:7b6e87514259549647e15ceeaf73d238792e6d77e2c79fc744d5badc8d6e997c}
+    restart: unless-stopped
+    stop_grace_period: 2m
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
+    ports:
+      - "${CRAFTY_ADMIN_BIND:-127.0.0.1}:8443:8443"
+      - "${MINECRAFT_BIND:-127.0.0.1}:25565-25569:25565-25569/tcp"
+    volumes:
+      - ${CRAFTY_DATA_PATH:-/srv/crafty}/backups:/crafty/backups
+      - ${CRAFTY_DATA_PATH:-/srv/crafty}/logs:/crafty/logs
+      - ${CRAFTY_DATA_PATH:-/srv/crafty}/servers:/crafty/servers
+      - ${CRAFTY_DATA_PATH:-/srv/crafty}/config:/crafty/app/config
+      - ${CRAFTY_DATA_PATH:-/srv/crafty}/import:/crafty/import
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }

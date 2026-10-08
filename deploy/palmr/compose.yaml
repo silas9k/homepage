@@ -1,0 +1,19 @@
+# Archived beta: isolated evaluation only, disabled unless the profile is selected explicitly.
+name: silas-palmr-evaluation
+services:
+  palmr:
+    profiles: [evaluation]
+    image: ${PALMR_IMAGE:-kyantech/palmr:v3.3.2-beta@sha256:043dd6cdbb4d9985b376915020fb26c2037b19876674273eac310ab04cdf16f4}
+    restart: unless-stopped
+    environment:
+      STORAGE_URL: ${PALMR_STORAGE_URL:-http://localhost:9379}
+      SECURE_SITE: ${PALMR_SECURE_SITE:-false}
+      TZ: ${TZ:-Europe/Berlin}
+    ports:
+      - "${PALMR_BIND:-127.0.0.1}:5487:5487"
+      - "${PALMR_BIND:-127.0.0.1}:9379:9379"
+    volumes:
+      - ${PALMR_DATA_PATH:-/srv/palmr/data}:/app/server
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }

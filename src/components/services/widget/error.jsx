@@ -1,5 +1,8 @@
 import { useTranslation } from "next-i18next/pages";
+import { useContext } from "react";
 import { IoAlertCircle } from "react-icons/io5";
+
+import { SettingsContext } from "utils/contexts/settings";
 
 function displayError(error) {
   return JSON.stringify(error[1] ? error[1] : error, null, 4);
@@ -11,6 +14,15 @@ function displayData(data) {
 
 export default function Error({ error }) {
   const { t } = useTranslation();
+  const { settings } = useContext(SettingsContext) ?? { settings: {} };
+
+  if (settings.silasTheme) {
+    return (
+      <div className="silas-widget-error" role="status">
+        Daten nicht verfügbar<span>Verbindung und API-Zugang prüfen</span>
+      </div>
+    );
+  }
 
   if (typeof error === "string") {
     error = { message: error };

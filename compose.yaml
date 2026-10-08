@@ -1,0 +1,32 @@
+name: silas-homepage
+services:
+  homepage:
+    image: ${HOMEPAGE_IMAGE:-silas-homepage:local}
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${HOMEPAGE_ENV_FILE:-.env}
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-localhost:3000,127.0.0.1:3000}
+      TZ: ${TZ:-Europe/Berlin}
+      LOG_TARGETS: stdout
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "${HOMEPAGE_BIND:-127.0.0.1}:${HOMEPAGE_PORT:-3000}:3000"
+    volumes:
+      - ${HOMEPAGE_CONFIG_PATH:-./config}:/app/config:ro
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 200
+    mem_limit: 768m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

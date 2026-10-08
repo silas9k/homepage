@@ -1,0 +1,16 @@
+name: silas-memos
+services:
+  memos:
+    image: ${MEMOS_IMAGE:-neosmemo/memos:0.31.0}
+    restart: unless-stopped
+    ports:
+      - "${MEMOS_BIND:-127.0.0.1}:5230:5230"
+    environment:
+      MEMOS_INSTANCE_URL: ${MEMOS_INSTANCE_URL:-http://localhost:5230}
+      TZ: ${TZ:-Europe/Berlin}
+    volumes:
+      - ${MEMOS_DATA_PATH:-/srv/memos/data}:/var/opt/memos
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }

@@ -9,6 +9,7 @@ import Status from "./status";
 import Widget from "./widget";
 
 import ResolvedIcon from "components/resolvedicon";
+import EmptyMetrics from "components/silas/empty-metrics";
 import { SettingsContext } from "utils/contexts/settings";
 import Docker from "widgets/docker/component";
 import Kubernetes from "widgets/kubernetes/component";
@@ -95,6 +96,24 @@ export default function Item({ service, groupName, useEqualHeights }) {
               statusStyle === "dot" ? "gap-0" : "gap-2 mr-2"
             } z-10 service-tags`}
           >
+            {settings.silasTheme && service.silas?.site && (
+              <span className="silas-site" title={service.silas.host}>
+                {settings.silasSites?.[service.silas.site] ?? service.silas.site}
+              </span>
+            )}
+            {settings.silasTheme &&
+              !service.siteMonitor &&
+              !service.ping &&
+              !service.container &&
+              !service.app &&
+              !service.proxmoxVMID && (
+                <span
+                  className="silas-status-unknown"
+                  role="img"
+                  aria-label="Status nicht konfiguriert"
+                  title="Status nicht konfiguriert"
+                />
+              )}
             {service.ping && (
               <div className="shrink-0 flex items-center justify-center service-tag service-ping">
                 <Ping groupName={groupName} serviceName={service.name} style={statusStyle} />
@@ -191,6 +210,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
           </div>
         )}
 
+        {settings.silasTheme && service.widgets.length === 0 && <EmptyMetrics service={service} />}
         {service.widgets.map((widget) => (
           <Widget widget={widget} service={service} key={widget.index} />
         ))}

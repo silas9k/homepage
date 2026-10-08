@@ -1,0 +1,8 @@
+# Use with: docker compose -f compose.yaml -f deploy/compose.ca.yaml up -d --build
+# HOMEPAGE_CA_FILE is a host path to your public CA certificate (PEM).
+services:
+  homepage:
+    environment:
+      NODE_EXTRA_CA_CERTS: /app/certs/homelab-ca.crt
+    volumes:
+      - ${HOMEPAGE_CA_FILE:?Set HOMEPAGE_CA_FILE}:/app/certs/homelab-ca.crt:ro

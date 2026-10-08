@@ -19,6 +19,7 @@
 # misc
 .DS_Store
 *.pem
+*.key
 
 # log files
 error.log
@@ -41,7 +42,24 @@ yarn-error.log*
 next-env.d.ts
 
 # homepage
-/config
+/config/logs/
+/config/*.log
+/.env
+/.env.*
+!/.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/compose.override.yaml
+/.local-references/
+/.local-tools/
+/artifacts/
+/playwright-report/
+/test-results/
+/AGENTS.md
+/CLAUDE.md
+/compose.override.yaml
+/deploy/*.local.yaml
 
 # IDEs
 /.idea/

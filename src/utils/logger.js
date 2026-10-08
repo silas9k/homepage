@@ -3,8 +3,10 @@ import { format as utilFormat } from "node:util";
 import winston from "winston";
 
 import checkAndCopyConfig, { CONF_DIR, getSettings } from "utils/config/config";
+import { createSecretRedactor } from "utils/silas-redact";
 
 let winstonLogger;
+let redactSecrets;
 
 function combineMessageAndSplat() {
   return {
@@ -21,7 +23,8 @@ function messageFormatter(logInfo) {
   const label = logInfo.label ? `<${logInfo.label}> ` : "";
   // e.g. fetch errors say nothing useful without the cause
   const cause = logInfo.cause ? `\ncaused by: ${logInfo.cause.stack ?? logInfo.cause}` : "";
-  return `[${logInfo.timestamp}] ${logInfo.level}: ${label}${logInfo.stack || logInfo.message}${cause}`;
+  redactSecrets ??= createSecretRedactor();
+  return redactSecrets(`[${logInfo.timestamp}] ${logInfo.level}: ${label}${logInfo.stack || logInfo.message}${cause}`);
 }
 
 function getConsoleLogger() {

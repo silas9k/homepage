@@ -1,181 +1,123 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/banner_light@2x.png">
-    <img src="images/banner_dark@2x.png" width="65%">
-  </picture>
-</p>
+# silasnet.
 
-<p align="center">
-  A modern, <em>fully static, fast</em>, secure <em>fully proxied</em>, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery.
-</p>
+Ein privates Homeserver-Dashboard auf Basis von [gethomepage/homepage](https://github.com/gethomepage/homepage), für die Debian-13-Docker-VM auf dem ThinkCentre M920q. Alle Dienste bleiben echte Homepage-Integrationen. Ohne konfigurierte APIs erscheinen ausschließlich neutrale Leerzustände.
 
-<p align="center">
-  <img src="images/1.png?v=2" />
-</p>
+## Auf Debian starten
 
-<p align="center">
-  <a href="https://github.com/gethomepage/homepage/actions/workflows/docker-publish.yml"><img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/gethomepage/homepage/docker-publish.yml"></a>
-  &nbsp;
-  <a href="https://codecov.io/gh/gethomepage/homepage"><img src="https://codecov.io/gh/gethomepage/homepage/graph/badge.svg?token=7SKFL4D9K7"/></a>
-  &nbsp;
-  <a href="https://crowdin.com/project/gethomepage" target="_blank"><img src="https://badges.crowdin.net/gethomepage/localized.svg"></a>
-  &nbsp;
-  <a href="https://discord.gg/k4ruYNrudu"><img alt="Discord" src="https://img.shields.io/discord/1019316731635834932"></a>
-  &nbsp;
-  <a href="https://gethomepage.dev/" title="Docs"><img title="Docs" src="https://github.com/gethomepage/homepage/actions/workflows/docs-publish.yml/badge.svg"/></a>
-  &nbsp;
-  <a href="https://paypal.me/phelpsben" title="Donate"><img alt="GitHub Sponsors" src="https://img.shields.io/github/sponsors/benphelps"></a>
-</p>
-
-# Features
-
-With features like quick search, bookmarks, weather support, a wide range of integrations and widgets, an elegant and modern design, and a focus on performance, Homepage is your ideal start to the day and a handy companion throughout it.
-
-- **Fast** - The site is statically generated at build time for instant load times.
-- **Secure** - All API requests to backend services are proxied, keeping your API keys hidden. Constantly reviewed for security by the community.
-- **For Everyone** - Images built for AMD64, ARM64.
-- **Full i18n** - Support for over 40 languages.
-- **Service & Web Bookmarks** - Add custom links to the homepage.
-- **Docker Integration** - Container status and stats. Automatic service discovery via labels.
-- **Service Integration** - Over 100 service integrations, including popular starr and self-hosted apps.
-- **Information & Utility Widgets** - Weather, time, date, search, and more.
-- **And much more...**
-
-## Docker Integration
-
-Homepage has built-in support for Docker, and can automatically discover and add services to the homepage based on labels. See the [Docker Service Discovery](https://gethomepage.dev/configs/docker/#automatic-service-discovery) page for more information.
-
-## Service Widgets
-
-Homepage also has support for hundreds of 3rd-party services, including all popular \*arr apps, and most popular self-hosted apps. Some examples include: Radarr, Sonarr, Lidarr, Bazarr, Ombi, Tautulli, Plex, Jellyfin, Emby, Transmission, qBittorrent, Deluge, Jackett, NZBGet, SABnzbd, etc. As well as service integrations, Homepage also has a number of information providers, sourcing information from a variety of external 3rd-party APIs. See the [Service](https://gethomepage.dev/widgets/) page for more information.
-
-## Information Widgets
-
-Homepage has built-in support for a number of information providers, including weather, time, date, search, glances and more. System and status information presented at the top of the page. See the [Information Providers](https://gethomepage.dev/widgets/) page for more information.
-
-## Customization
-
-Homepage is highly customizable, with support for custom themes, custom CSS & JS, custom layouts, formatting, localization and more. See the [Settings](https://gethomepage.dev/configs/settings/) page for more information.
-
-# Getting Started
-
-For configuration options, examples and more, [please check out the homepage documentation](http://gethomepage.dev).
-
-## Security Notice 🔒
-
-Please note that when using features such as widgets, Homepage can access personal information (for example from your home automation system). To keep your information private, if Homepage is reachable from any untrusted network, it:
-
-1. **must** sit behind a reverse proxy (and/or VPN) that enforces authentication, TLS, and strictly validates Host headers.
-2. An optional built-in OIDC login flow or simple password login is available (opt-in) offering a simple “authenticated or not” guard.
-
-## With Docker
-
-Using docker compose:
-
-```yaml
-services:
-  homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
-    environment:
-      HOMEPAGE_ALLOWED_HOSTS: gethomepage.dev # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
-      PUID: 1000 # optional, your user id
-      PGID: 1000 # optional, your group id
-    ports:
-      - 3000:3000
-    volumes:
-      - /path/to/config:/app/config # Make sure your local config directory exists
-      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
-    restart: unless-stopped
-```
-
-or docker run:
+Voraussetzung: Git, Docker Engine und Docker Compose >= 2.24.4. Im Fork muss der Branch `feat/silas-homeserver-dashboard` vorhanden sein. `YOUR_GITHUB_USER` durch den eigenen GitHub-Namen ersetzen.
 
 ```bash
-docker run --name homepage \
-  -e HOMEPAGE_ALLOWED_HOSTS=gethomepage.dev \
-  -e PUID=1000 \
-  -e PGID=1000 \
-  -p 3000:3000 \
-  -v /path/to/config:/app/config \
-  -v /var/run/docker.sock:/var/run/docker.sock:ro \
-  --restart unless-stopped \
-  ghcr.io/gethomepage/homepage:latest
+git clone --branch feat/silas-homeserver-dashboard https://github.com/YOUR_GITHUB_USER/silas-homepage.git
+cd silas-homepage
+cp .env.example .env
+chmod 600 .env
+nano .env
+docker compose config --quiet
+docker compose up -d --build
+docker compose ps
+curl --fail http://127.0.0.1:3000/api/healthcheck
 ```
 
-## From Source
+Das eigene Image ist nötig, weil dieser Fork React- und Sicherheitsanpassungen enthält. `ghcr.io/gethomepage/homepage` enthält diese Änderungen **nicht**. Der erste Build benötigt Netzwerkzugang und temporär mehr RAM als der laufende Container. Das Laufzeitlimit beträgt 768 MiB. Das Dashboard läuft als UID 1000, ohne Linux-Capabilities, ohne Docker-Socket, mit Neustartrichtlinie und Healthcheck.
 
-First, clone the repository:
+Standardmäßig ist der Port ausschließlich an `127.0.0.1` der Debian-VM gebunden. Für den ersten Zugriff vom eigenen Rechner, ohne einen Port freizugeben:
 
 ```bash
-git clone https://github.com/gethomepage/homepage.git
+ssh -N -L 3000:127.0.0.1:3000 YOUR_SSH_USER@debian-docker
 ```
 
-Then install dependencies and build the production bundle:
+Dann im Browser `http://localhost:3000` öffnen. SSH-Benutzer und Host anpassen. Für einen direkten Zugriff im eigenen LAN/Tailnet `HOMEPAGE_BIND` auf die feste VM- oder Tailscale-Adresse setzen und den verwendeten Namen inklusive Port in `HOMEPAGE_ALLOWED_HOSTS` ergänzen. Keine Platzhalter-IP steht im Quellcode. Details: [Zugriff und Sicherheit](docs/silas/SECURITY.md).
+
+## Welche Werte muss ich setzen?
+
+Für den Start über SSH sind **keine API-Zugangsdaten erforderlich**. Für den gewünschten direkten Zugriff müssen nur Bind-Adresse und erlaubter Host stimmen:
+
+| Wert                     | Bedeutung                                                                   |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `HOMEPAGE_BIND`          | Standard `127.0.0.1`; für direkten privaten Zugriff die passende VM-Adresse |
+| `HOMEPAGE_PORT`          | Standard `3000`                                                             |
+| `HOMEPAGE_ALLOWED_HOSTS` | Exakte Browser-Hosts, gegebenenfalls mit Port; niemals `*`                  |
+| `HOMEPAGE_VAR_*`         | Optionale Dienst-URLs und APIs; leer lassen, solange unbekannt              |
+
+Ein Widget wird erst aktiv, wenn sämtliche in `silasRequired` genannten Felder gesetzt sind. Ein leerer Link wird entfernt, eine leere Health-URL wird nicht abgefragt. Paperless-ngx, Minecraft Server 2 und Playit.gg bleiben verborgen, bis ihre URL gesetzt wird. Resticwatch und das zukünftige Pi-Backupziel sind als optionale/geplante Karten sichtbar. Nach `.env`-Änderungen `docker compose up -d --force-recreate` ausführen, dann im Dashboard unten rechts neu laden. Passwörter mit Sonderzeichen in `.env` in einfache Anführungszeichen setzen. Für Dateisecrets siehe Sicherheitsdokumentation.
+
+## Dienste und reale Metriken
+
+| Bereich               | Dienste                                                          | Daten / Zustand                                                       |
+| --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Server                | Proxmox, debian-docker, raspi                                    | PVE-Lesetoken; Glances 4 je Host                                      |
+| Cloud & Dokumente     | Nextcloud, Memos, Vaultwarden, Palmr                             | NC-Dateien/Nutzer/Speicher; übrige Links/HTTP, Palmr archivierte Beta |
+| Fotos & Medien        | Immich, Jellyfin                                                 | Immich Fotos/Videos/Speicher/Nutzer; Jellyfin Bibliothek              |
+| Smart Home            | Home Assistant, Homebridge · Standort A, Homebridge · Standort B | HA und zwei völlig getrennte UI-X-APIs                                |
+| Gaming                | Crafty Controller, Minecraft · Server 1                          | Crafty HTTP; echtes Minecraft-Statuswidget mit Spielerzahl/Version    |
+| Verwaltung & Netzwerk | Portainer, Tailscale, Cloudflare Tunnel                          | Optionale dedizierte Integrationen                                    |
+| Backups               | Resticwatch, Backup-HDD · Raspberry Pi                           | Optional/geplant, bis echte Datenquellen bestehen                     |
+| Verborgen vorbereitet | Paperless-ngx, Minecraft · Server 2, Playit.gg                   | Erst nach Konfiguration sichtbar                                      |
+
+19 sichtbare Karten. **HOME A** ist standardmäßig der ThinkCentre, **HOME B** der Pi am anderen Standort. Labels zentral unter `silasSites` in `config/settings.yaml` ändern; Kartennamen/Hostzuordnung in `services.yaml`. Die Pi-Bridge bleibt bestehen, die zweite läuft in debian-docker. Homebridge hat getrennte `HOMEPAGE_VAR_HOMEBRIDGE_A_*`/`B_*` Werte. Frühere einzelne `HOMEPAGE_VAR_HOMEBRIDGE_*` Werte gegebenenfalls einmalig in die passende Gruppe übertragen.
+
+[Integrationen einrichten](docs/silas/INTEGRATIONS.md) beschreibt Tokens, unterstützte Metriken und Grenzen. Proxmox-Speicher/Uptime, Jellyfin-Speicher und Nextcloud-Datenbank-/Redis-Health sind bewusst nicht durch Ersatzwerte dargestellt. Ein grauer Punkt bedeutet **Status nicht konfiguriert**, ein grüner HTTP-Punkt lediglich **HTTP-Endpunkt erreichbar**, nicht einen erfolgreichen Backup-Job oder vollständig gesunden Dienst.
+
+## Weitere Apps und zwei Standorte
+
+[Deployment-Übersicht](deploy/README.md) mit getrennten Anleitungen für **Memos, Immich, Homebridge und Crafty**. Alle Daten unter `/srv`, keine Medien/Welten in Git. Apps werden nicht zusammen mit Homepage gestartet. Immich nutzt den offiziellen Release-Stack; Crafty persistiert Welten und Konfiguration und veröffentlicht standardmäßig nur Loopback-Ports. Palmr ist ausdrücklich eine deaktivierte **Evaluation einer archivierten Beta**, keine stabile Produktionsempfehlung.
+
+[Netzwerkplan](docs/silas/NETWORK.md): Tailscale/LAN für Administration und Immich-Großuploads. Geplant sind `memos.silasnet.win`, optional `photos.silasnet.win`; `share.silasnet.win` und `share-storage.silasnet.win` erst nach erneuter Palmr-Prüfung. Es wurden keine DNS-Records, Tunnel oder Cloudflare-Freigaben angelegt. Cloudflare-Uploadlimits gelten auch für große Videos/Dateitransfers. Minecraft läuft lokal ohne Playit; optionaler Playit-Agent transportiert nur Spielverkehr.
+
+## Design und Konfiguration
+
+- `config/settings.yaml`: Wortmarke/Titel (`silasnet.`), Sprache, Layout.
+- `config/services.yaml`: Kategorien, Links, erforderliche Zugangsdaten und Widget-Felder.
+- `config/custom.css`: Farben, Abstände, Karten, responsive Darstellung.
+- `config/widgets.yaml`, `bookmarks.yaml`, `docker.yaml`, `proxmox.yaml`, `kubernetes.yaml`: bewusst leere, gültige Startkonfiguration.
+- `public/silas/`: lokal ausgelieferte Icons und Favicon.
+
+Alle elf Referenzbilder wurden geprüft; persönliche Inhalte aus den Vorlagen sind nicht übernommen. API-Anfragen erfolgen frühestens alle 60 Sekunden pro Widget-Endpunkt; HTTP-Prüfungen alle 30 Sekunden. Ohne API-Konfiguration gibt es keine Widget-Abfragen. Die Suche öffnet konfigurierte Dienste: Suchknopf fokussieren und Enter drücken oder auf der Seite tippen, dann Pfeiltasten/Enter; Escape schließt sie. Nicht konfigurierte Dienste haben keinen ausführbaren Link.
+
+## Aktualisieren und zurückrollen
+
+Für den lokalen Image-Build:
 
 ```bash
-pnpm install
+git pull --ff-only
+docker compose build --pull
+docker compose up -d
+docker compose ps
+```
+
+`.env` bleibt lokal und wird nie committed. Vor Updates eine private Sicherung von `.env` und eigenen Konfigurationsänderungen anlegen. Eigene YAML-Anpassungen auf dem eigenen Branch committen; niemals Zugangsdaten hinein schreiben. Zur Rückkehr einen bekannten guten Commit auschecken und mit `docker compose up -d --build` neu bauen.
+
+Optional kann der manuell gestartete Workflow **Silas container** ein eigenes GHCR-Image bauen und veröffentlichen. Danach `HOMEPAGE_IMAGE=ghcr.io/YOUR_GITHUB_USER/silas-homepage:latest` in `.env` ergänzen; bei privatem Image vorher bei GHCR anmelden. Erst dann ist dieser kurze Image-Workflow sinnvoll:
+
+```bash
+git pull --ff-only
+docker compose pull
+docker compose up -d --no-build
+```
+
+## Lokale Entwicklung und Prüfungen
+
+Node 22+, pnpm 11.8.0. Kein fremdes Projekt wird benötigt.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm exec vitest run --maxWorkers=4
 pnpm build
+node deploy/preview.mjs
 ```
 
-If this is your first time starting, copy the `src/skeleton` directory to `config/` to populate initial example config files.
-
-Finally, run the server in production mode:
+Für die Browserprüfung in einem zweiten Terminal:
 
 ```bash
-HOMEPAGE_ALLOWED_HOSTS=gethomepage.dev:1234 pnpm start
+pnpm exec playwright install chromium
+pnpm exec playwright test
 ```
 
-# Configuration
+Das Preview-Skript startet den echten Standalone-Build auf `127.0.0.1:3100` und kopiert dessen statische Assets. Browserprüfungen erwarten die unkonfigurierte Beispielkonfiguration und erzeugen Screenshots unter `artifacts/`. Integrationstests mit synthetischen Antworten sind nur Tests, keine Produktionsdaten.
 
-Please refer to the [homepage documentation website](https://gethomepage.dev/) for more information. Everything you need to know about configuring Homepage is there. Please read everything carefully before asking for help, as most questions are answered there or are simple YAML configuration issues.
+## Fork und Upstream
 
-# Development
+[GitHub-Einrichtung, Dateiübersicht und Upstream-Sync](CUSTOMIZATION.md). Die vollständige Upstream-Historie und Funktionalität bleiben erhalten. [Ursprüngliche README](docs/silas/UPSTREAM_README.md), [Upstream-Dokumentation](https://gethomepage.dev/), [GPL-3.0-Lizenz](LICENSE), [Icon-Lizenz und Attribution](public/silas/icons/NOTICE.md).
 
-Install NPM packages, this project uses [pnpm](https://pnpm.io/) (and so should you!):
-
-```bash
-pnpm install
-```
-
-Start the development server:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to start.
-
-This is a [Next.js](https://nextjs.org/) application, see their documentation for more information.
-
-# Documentation
-
-The homepage documentation is available at [https://gethomepage.dev/](https://gethomepage.dev/).
-
-Homepage uses Zensical for documentation. To run the documentation locally, first install the dependencies:
-
-```bash
-uv sync
-```
-
-Then run the development server:
-
-```bash
-uv run zensical serve # or build, to build the static site
-```
-
-# Support & Suggestions
-
-If you have any questions, suggestions, or general issues, please start a discussion on the [Discussions](https://github.com/gethomepage/homepage/discussions) page.
-
-## Troubleshooting
-
-In addition to the docs, the [troubleshooting guide](https://gethomepage.dev/troubleshooting/) can help reveal many basic config or network issues. If you're having a problem, it's a good place to start.
-
-## Contributing & Contributors
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
-Thanks to the over 200 contributors who have helped make this project what it is today!
-
-Especially huge thanks to [@shamoon](https://github.com/shamoon), who has been the backbone of this community from the very start.
+Den aktuellen, tatsächlich ausgeführten Prüfstand und verbleibende Umgebungsgrenzen dokumentiert [VALIDATION.md](docs/silas/VALIDATION.md).

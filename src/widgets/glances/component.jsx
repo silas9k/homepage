@@ -8,9 +8,12 @@ import Memory from "./metrics/memory";
 import Net from "./metrics/net";
 import Process from "./metrics/process";
 import Sensor from "./metrics/sensor";
+import Summary from "./metrics/summary";
 
 export default function Component({ service }) {
   const { widget } = service;
+
+  if (widget.metric.startsWith("summary:")) return <Summary service={service} />;
 
   if (widget.metric === "info") {
     return <Info service={service} />;

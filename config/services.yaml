@@ -1,0 +1,401 @@
+- Server:
+    - Proxmox:
+        icon: /silas/icons/proxmox.svg
+        description: ThinkCentre M920q · Virtualisierung
+        href: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+        silas:
+          metrics:
+            - CPU
+            - RAM
+            - VMs
+            - LXC
+          site: a
+          host: ThinkCentre M920q
+        widget:
+          type: proxmox
+          url: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+          username: "{{HOMEPAGE_VAR_PROXMOX_TOKEN_ID}}"
+          password: "{{HOMEPAGE_VAR_PROXMOX_TOKEN_SECRET}}"
+          node: "{{HOMEPAGE_VAR_PROXMOX_NODE}}"
+          silasRequired:
+            - url
+            - username
+            - password
+            - node
+          fields:
+            - resources.cpu
+            - resources.mem
+            - vms
+            - lxc
+    - debian-docker:
+        icon: /silas/icons/debian.svg
+        description: Debian 13 · Docker Host
+        href: "{{HOMEPAGE_VAR_DEBIAN_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_DEBIAN_HEALTH_URL}}"
+        silas:
+          metrics:
+            - CPU
+            - RAM
+            - Disk
+          site: a
+          host: debian-docker
+        widget:
+          type: glances
+          url: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_URL}}"
+          username: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_USER}}"
+          password: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_PASSWORD}}"
+          version: 4
+          metric: summary:/
+          refreshInterval: 60000
+          silasRequired:
+            - url
+    - raspi:
+        icon: /silas/icons/raspberry-pi.svg
+        description: Raspberry Pi 5 · Homebridge & Backups
+        href: "{{HOMEPAGE_VAR_RASPI_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_RASPI_HEALTH_URL}}"
+        silas:
+          metrics:
+            - CPU
+            - RAM
+            - Disk
+          site: b
+          host: Raspberry Pi 5
+        widget:
+          type: glances
+          url: "{{HOMEPAGE_VAR_RASPI_GLANCES_URL}}"
+          username: "{{HOMEPAGE_VAR_RASPI_GLANCES_USER}}"
+          password: "{{HOMEPAGE_VAR_RASPI_GLANCES_PASSWORD}}"
+          version: 4
+          metric: summary:/
+          refreshInterval: 60000
+          silasRequired:
+            - url
+- Cloud & Dokumente:
+    - Nextcloud:
+        icon: /silas/icons/nextcloud.svg
+        description: Dateien, Kalender und Kontakte
+        href: "{{HOMEPAGE_VAR_NEXTCLOUD_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_NEXTCLOUD_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Freier Speicher
+            - Aktive Nutzer
+            - Dateien
+          site: a
+          host: debian-docker
+        widget:
+          type: nextcloud
+          url: "{{HOMEPAGE_VAR_NEXTCLOUD_URL}}"
+          key: "{{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}"
+          fields:
+            - freespace
+            - activeusers
+            - numfiles
+          silasRequired:
+            - url
+            - key
+    - Memos:
+        icon: /silas/icons/memos.svg
+        description: Notizen und Gedanken
+        href: "{{HOMEPAGE_VAR_MEMOS_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_MEMOS_HEALTH_URL}}"
+        silas:
+          site: a
+          host: debian-docker
+    - Vaultwarden:
+        icon: /silas/icons/vaultwarden.svg
+        description: Passwort-Manager
+        href: "{{HOMEPAGE_VAR_VAULTWARDEN_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_VAULTWARDEN_HEALTH_URL}}"
+        silas:
+          site: a
+          host: debian-docker
+    - Palmr:
+        icon: /silas/icons/palmr.svg
+        description: Sicherer Dateitransfer
+        href: "{{HOMEPAGE_VAR_PALMR_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_PALMR_HEALTH_URL}}"
+        silas:
+          site: a
+          host: debian-docker
+          note: Optional · archivierte Beta prüfen
+    - Paperless-ngx:
+        icon: /silas/icons/paperless-ngx.svg
+        description: Dokumente und digitales Archiv
+        href: "{{HOMEPAGE_VAR_PAPERLESS_URL}}"
+        silas:
+          optional: true
+          metrics:
+            - Dokumente
+            - Eingang
+        widget:
+          type: paperlessngx
+          url: "{{HOMEPAGE_VAR_PAPERLESS_URL}}"
+          key: "{{HOMEPAGE_VAR_PAPERLESS_TOKEN}}"
+          fields:
+            - documents
+            - inbox
+          silasRequired:
+            - url
+            - key
+- Fotos & Medien:
+    - Immich:
+        icon: /silas/icons/immich.svg
+        description: Fotos und Videos
+        href: "{{HOMEPAGE_VAR_IMMICH_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_IMMICH_HEALTH_URL}}"
+        silas:
+          site: a
+          host: debian-docker
+          metrics:
+            - Fotos
+            - Videos
+            - Speicher
+            - Nutzer
+        widget:
+          type: immich
+          url: "{{HOMEPAGE_VAR_IMMICH_API_URL}}"
+          key: "{{HOMEPAGE_VAR_IMMICH_TOKEN}}"
+          version: 2
+          fields:
+            - photos
+            - videos
+            - storage
+            - users
+          silasRequired:
+            - url
+            - key
+    - Jellyfin:
+        icon: /silas/icons/jellyfin.svg
+        description: Filme und Serien
+        href: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_JELLYFIN_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Filme
+            - Serien
+            - Episoden
+          site: a
+          host: debian-docker
+        widget:
+          type: jellyfin
+          url: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
+          key: "{{HOMEPAGE_VAR_JELLYFIN_TOKEN}}"
+          version: "{{HOMEPAGE_VAR_JELLYFIN_WIDGET_VERSION}}"
+          enableBlocks: true
+          enableNowPlaying: false
+          enableUser: false
+          enableMediaControl: false
+          fields:
+            - movies
+            - series
+            - episodes
+          silasRequired:
+            - url
+            - key
+            - version
+- Smart Home:
+    - Home Assistant:
+        icon: /silas/icons/home-assistant.svg
+        description: Steuerung und Automationen
+        href: "{{HOMEPAGE_VAR_HOMEASSISTANT_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_HOMEASSISTANT_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Lichter an
+            - Schalter an
+        widget:
+          type: homeassistant
+          url: "{{HOMEPAGE_VAR_HOMEASSISTANT_API_URL}}"
+          key: "{{HOMEPAGE_VAR_HOMEASSISTANT_TOKEN}}"
+          fields:
+            - lights_on
+            - switches_on
+          silasRequired:
+            - url
+            - key
+    - Homebridge · Standort A:
+        icon: /silas/icons/homebridge.svg
+        description: HomeKit Bridge · debian-docker
+        href: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Updates
+            - Bridges
+          site: a
+          host: debian-docker
+        widget:
+          type: homebridge
+          url: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_API_URL}}"
+          username: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_USER}}"
+          password: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_PASSWORD}}"
+          fields:
+            - updates
+            - child_bridges
+          silasRequired:
+            - url
+            - username
+            - password
+    - Homebridge · Standort B:
+        icon: /silas/icons/homebridge.svg
+        description: HomeKit Bridge · Raspberry Pi 5
+        href: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Updates
+            - Bridges
+          site: b
+          host: Raspberry Pi 5
+        widget:
+          type: homebridge
+          url: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_API_URL}}"
+          username: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_USER}}"
+          password: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_PASSWORD}}"
+          fields:
+            - updates
+            - child_bridges
+          silasRequired:
+            - url
+            - username
+            - password
+- Gaming:
+    - Crafty Controller:
+        icon: /silas/icons/crafty-controller.svg
+        description: Minecraft Serververwaltung
+        href: "{{HOMEPAGE_VAR_CRAFTY_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_CRAFTY_HEALTH_URL}}"
+        silas:
+          site: a
+          host: debian-docker
+    - Minecraft · Server 1:
+        icon: /silas/icons/minecraft.svg
+        description: Java Edition · ThinkCentre
+        silas:
+          site: a
+          host: debian-docker
+          metrics:
+            - Status
+            - Spieler
+            - Version
+          optional: false
+        href: "{{HOMEPAGE_VAR_MINECRAFT_URL}}"
+        widget:
+          type: minecraft
+          url: "{{HOMEPAGE_VAR_MINECRAFT_STATUS_URL}}"
+          fields:
+            - status
+            - players
+            - version
+          silasRequired:
+            - url
+    - Minecraft · Server 2:
+        icon: /silas/icons/minecraft.svg
+        description: Java Edition · ThinkCentre
+        silas:
+          site: a
+          host: debian-docker
+          metrics:
+            - Status
+            - Spieler
+            - Version
+          optional: true
+        href: "{{HOMEPAGE_VAR_MINECRAFT_2_URL}}"
+        widget:
+          type: minecraft
+          url: "{{HOMEPAGE_VAR_MINECRAFT_2_STATUS_URL}}"
+          fields:
+            - status
+            - players
+            - version
+          silasRequired:
+            - url
+    - Playit.gg:
+        icon: /silas/icons/minecraft.svg
+        description: Optionaler Minecraft-Tunnel
+        href: "{{HOMEPAGE_VAR_PLAYIT_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_PLAYIT_HEALTH_URL}}"
+        silas:
+          optional: true
+- Verwaltung & Netzwerk:
+    - Portainer:
+        icon: /silas/icons/portainer.svg
+        description: Docker-Verwaltung
+        href: "{{HOMEPAGE_VAR_PORTAINER_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_PORTAINER_HEALTH_URL}}"
+        silas:
+          metrics:
+            - Aktiv
+            - Gestoppt
+            - Gesamt
+          site: a
+          host: debian-docker
+        widget:
+          type: portainer
+          url: "{{HOMEPAGE_VAR_PORTAINER_URL}}"
+          env: "{{HOMEPAGE_VAR_PORTAINER_ENV}}"
+          key: "{{HOMEPAGE_VAR_PORTAINER_TOKEN}}"
+          fields:
+            - running
+            - stopped
+            - total
+          silasRequired:
+            - url
+            - env
+            - key
+    - Tailscale:
+        icon: /silas/icons/tailscale.svg
+        description: Privates Netzwerk
+        href: https://login.tailscale.com/admin/machines
+        silas:
+          metrics:
+            - Zuletzt gesehen
+            - Schlüsselablauf
+        widget:
+          type: tailscale
+          deviceid: "{{HOMEPAGE_VAR_TAILSCALE_DEVICE_ID}}"
+          key: "{{HOMEPAGE_VAR_TAILSCALE_TOKEN}}"
+          fields:
+            - last_seen
+            - expires
+          silasRequired:
+            - deviceid
+            - key
+    - Cloudflare Tunnel:
+        icon: /silas/icons/cloudflare.svg
+        description: Remote-Zugriff
+        href: https://one.dash.cloudflare.com/
+        silas:
+          metrics:
+            - Tunnel-Status
+        widget:
+          type: cloudflared
+          accountid: "{{HOMEPAGE_VAR_CLOUDFLARE_ACCOUNT_ID}}"
+          tunnelid: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_ID}}"
+          key: "{{HOMEPAGE_VAR_CLOUDFLARE_TOKEN}}"
+          fields:
+            - status
+          silasRequired:
+            - accountid
+            - tunnelid
+            - key
+- Backups:
+    - Resticwatch:
+        icon: /silas/icons/backup.svg
+        description: Backup-Monitoring
+        href: "{{HOMEPAGE_VAR_RESTICWATCH_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_RESTICWATCH_HEALTH_URL}}"
+        silas:
+          note: Optional · nicht konfiguriert
+    - Backup-HDD · Raspberry Pi:
+        icon: /silas/icons/backup.svg
+        description: Backupziel · geplant
+        href: "{{HOMEPAGE_VAR_BACKUP_HDD_URL}}"
+        siteMonitor: "{{HOMEPAGE_VAR_BACKUP_HDD_HEALTH_URL}}"
+        silas:
+          site: b
+          host: Raspberry Pi 5
+          note: Geplant · noch keine Backup-Daten

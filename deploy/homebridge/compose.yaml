@@ -1,0 +1,14 @@
+name: silas-homebridge
+services:
+  homebridge:
+    image: ${HOMEBRIDGE_IMAGE:-homebridge/homebridge:latest@sha256:22cdfca31934661ef9aaaa2e3fa74daa84a803fbf4c4a6c38c6bc1460b9f0596}
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: ${TZ:-Europe/Berlin}
+      ENABLE_AVAHI: "1"
+    volumes:
+      - ${HOMEBRIDGE_DATA_PATH:-/srv/homebridge/data}:/homebridge
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }

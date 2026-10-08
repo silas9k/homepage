@@ -13,6 +13,7 @@ import BookmarksGroup from "components/bookmarks/group";
 import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
 import ServicesGroup from "components/services/group";
+import SilasHeader from "components/silas/header";
 import Tab, { slugifyAndEncode } from "components/tab";
 import Revalidate from "components/toggles/revalidate";
 import Widget from "components/widgets/widget";
@@ -461,51 +462,54 @@ function Home({ initialSettings }) {
           isOpen={searching}
           setSearching={setSearching}
         />
-        <div
-          id="information-widgets"
-          className={classNames(
-            "flex flex-row flex-wrap justify-between z-20",
-            headerStyles[headerStyle],
-            settings.cardBlur !== undefined &&
-              headerStyle === "boxed" &&
-              `backdrop-blur${settings.cardBlur.length ? "-" : ""}${settings.cardBlur}`,
-          )}
-        >
-          <div id="widgets-wrap" className={classNames("flex flex-row w-full flex-wrap justify-between gap-x-2")}>
-            {widgets && (
-              <>
-                {widgets
-                  .filter((widget) => !rightAlignedWidgets.includes(widget.type))
-                  .map((widget, i) => (
-                    <Widget
-                      key={i}
-                      widget={widget}
-                      style={{ header: headerStyle, isRightAligned: false, cardBlur: settings.cardBlur }}
-                    />
-                  ))}
-
-                <div
-                  id="information-widgets-right"
-                  className={classNames(
-                    "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end",
-                    "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end gap-x-2",
-                  )}
-                >
+        {settings.silasTheme ? (
+          <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
+        ) : (
+          <div
+            id="information-widgets"
+            className={classNames(
+              "flex flex-row flex-wrap justify-between z-20",
+              headerStyles[headerStyle],
+              settings.cardBlur !== undefined &&
+                headerStyle === "boxed" &&
+                `backdrop-blur${settings.cardBlur.length ? "-" : ""}${settings.cardBlur}`,
+            )}
+          >
+            <div id="widgets-wrap" className={classNames("flex flex-row w-full flex-wrap justify-between gap-x-2")}>
+              {widgets && (
+                <>
                   {widgets
-                    .filter((widget) => rightAlignedWidgets.includes(widget.type))
+                    .filter((widget) => !rightAlignedWidgets.includes(widget.type))
                     .map((widget, i) => (
                       <Widget
                         key={i}
                         widget={widget}
-                        style={{ header: headerStyle, isRightAligned: true, cardBlur: settings.cardBlur }}
+                        style={{ header: headerStyle, isRightAligned: false, cardBlur: settings.cardBlur }}
                       />
                     ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
+                  <div
+                    id="information-widgets-right"
+                    className={classNames(
+                      "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end",
+                      "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end gap-x-2",
+                    )}
+                  >
+                    {widgets
+                      .filter((widget) => rightAlignedWidgets.includes(widget.type))
+                      .map((widget, i) => (
+                        <Widget
+                          key={i}
+                          widget={widget}
+                          style={{ header: headerStyle, isRightAligned: true, cardBlur: settings.cardBlur }}
+                        />
+                      ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
         {servicesAndBookmarksGroups}
 
         <div id="footer" className="flex flex-col mt-auto p-8 w-full">

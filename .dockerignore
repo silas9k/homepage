@@ -22,5 +22,15 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 README.md
-config/
+config/logs/
 k3d/
+.next/
+.local-references/
+.local-tools/
+artifacts/
+coverage/
+**/.env.*
+**/*.pem
+**/*.key
+**/*.log
+**/*.local.yaml

@@ -1,0 +1,49 @@
+title: silasnet.
+description: Mein Homelab · Dienste und Infrastruktur
+language: de
+theme: light
+color: stone
+silasTheme: true
+cardStyle: hairline
+blockStyle: refined
+headerStyle: clean
+statusStyle: dot
+useEqualHeights: true
+disableCollapse: true
+disableIndexing: true
+disableUpdateCheck: true
+hideVersion: true
+hideErrors: false
+fullWidth: true
+target: _blank
+favicon: /silas/favicon.svg
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  showSearchSuggestions: false
+  hideVisitURL: true
+layout:
+  Server:
+    style: row
+    columns: 3
+  Cloud & Dokumente:
+    style: row
+    columns: 3
+  Fotos & Medien:
+    style: row
+    columns: 3
+  Smart Home:
+    style: row
+    columns: 3
+  Gaming:
+    style: row
+    columns: 3
+  Verwaltung & Netzwerk:
+    style: row
+    columns: 3
+  Backups:
+    style: row
+    columns: 3
+silasSites:
+  a: HOME A
+  b: HOME B

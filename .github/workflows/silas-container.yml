@@ -1,0 +1,48 @@
+name: Silas container
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the custom image to this account's GHCR
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  packages: write
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -f deploy/Dockerfile -t silas-homepage:local .
+      - name: Validate Compose and run a container smoke test
+        env:
+          HOMEPAGE_ENV_FILE: .env.example
+        run: |
+          docker compose --env-file .env.example config --quiet
+          docker compose --env-file .env.example up -d --no-build --wait --wait-timeout 120
+          curl --fail http://127.0.0.1:3000/api/healthcheck
+          curl --fail http://127.0.0.1:3000/api/services | python3 -c 'import json,sys; groups=json.load(sys.stdin); assert sum(len(g["services"]) for g in groups)==19'
+          docker compose restart
+          docker compose up -d --no-build --wait --wait-timeout 120
+          curl --fail http://127.0.0.1:3000/api/healthcheck
+      - name: Publish custom image
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+          GH_OWNER: ${{ github.repository_owner }}
+        run: |
+          IMAGE="ghcr.io/${GH_OWNER,,}/silas-homepage"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_USER" --password-stdin
+          docker tag silas-homepage:local "$IMAGE:$GITHUB_SHA"
+          docker tag silas-homepage:local "$IMAGE:latest"
+          docker push "$IMAGE:$GITHUB_SHA"
+          docker push "$IMAGE:latest"
+      - name: Clean up
+        if: always()
+        env:
+          HOMEPAGE_ENV_FILE: .env.example
+        run: docker compose --env-file .env.example down

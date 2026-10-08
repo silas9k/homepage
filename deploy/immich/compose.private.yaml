@@ -1,0 +1,21 @@
+# Merge with the official release Compose, never use this file by itself.
+# !override requires Docker Compose >= 2.24.4.
+services:
+  immich-server:
+    ports: !override
+      - "${IMMICH_BIND:-127.0.0.1}:2283:2283"
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+  immich-machine-learning:
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+  redis:
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+  database:
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }

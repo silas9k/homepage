@@ -59,5 +59,14 @@ export default defineConfig([
       "import/order": "off",
     },
   },
-  globalIgnores(["./config/", "./coverage/", "./.venv/", "./.next/", "./site/"]),
+  globalIgnores([
+    "./config/",
+    "./coverage/",
+    "./.venv/",
+    "./.next/",
+    "./site/",
+    "./.local-tools/",
+    "./.local-references/",
+    "./artifacts/",
+  ]),
 ]);

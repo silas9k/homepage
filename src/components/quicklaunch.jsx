@@ -86,6 +86,7 @@ export default function QuickLaunch({ servicesAndBookmarks, searchString, setSea
   const { searchDescriptions = false, hideVisitURL = false } = settings?.quicklaunch ?? {};
 
   const searchField = useRef();
+  const returnFocus = useRef();
 
   const [currentItemIndex, setCurrentItemIndex] = useState(null);
   const url = parseUrl(searchString);
@@ -246,17 +247,20 @@ export default function QuickLaunch({ servicesAndBookmarks, searchString, setSea
     }
 
     if (isOpen) {
+      if (settings.silasTheme) returnFocus.current = document.activeElement;
       searchField.current.focus();
       document.body.addEventListener("click", handleBackdropClick);
     } else {
       searchField.current.blur();
+      if (settings.silasTheme) returnFocus.current?.focus();
     }
 
     return () => document.body.removeEventListener("click", handleBackdropClick);
-  }, [isOpen, closeAndReset]);
+  }, [isOpen, closeAndReset, settings.silasTheme]);
 
   function highlightText(text) {
-    const parts = text.split(new RegExp(`(${searchString})`, "gi"));
+    const escapedSearch = searchString.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parts = text.split(new RegExp(`(${escapedSearch})`, "gi"));
     return (
       <span>
         {parts.map((part, i) =>
@@ -285,15 +289,30 @@ export default function QuickLaunch({ servicesAndBookmarks, searchString, setSea
           transitionDelay: isOpen ? "0s, 0s" : "0s, 300ms",
         }}
         role="dialog"
+        aria-label={settings.silasTheme ? "Dienste suchen" : "Quick launch"}
         aria-modal="true"
         aria-hidden={!isOpen}
+        onKeyDown={(event) => {
+          if (!settings.silasTheme || event.key !== "Tab" || !isOpen) return;
+          const controls = [...event.currentTarget.querySelectorAll("input, button")];
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last?.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first?.focus();
+          }
+        }}
       >
         <div className="fixed inset-0 bg-gray-500 opacity-50" />
         <div className="fixed inset-0 z-20 overflow-y-auto">
           <div className="flex min-h-full min-w-full items-start justify-center text-center">
             <dialog className="mt-[10%] mx-auto min-w-[90%] max-w-[90%] md:min-w-[40%] md:max-w-[40%] rounded-md p-0 block font-medium text-theme-700 dark:text-theme-200 dark:hover:text-theme-300 shadow-md shadow-theme-900/10 dark:shadow-theme-900/20 bg-theme-50 dark:bg-theme-800">
               <input
-                placeholder="Search"
+                placeholder={settings.silasTheme ? "Dienste suchen …" : "Search"}
+                aria-label={settings.silasTheme ? "Dienste suchen" : "Search"}
                 className={classNames(
                   results.length > 0 && "rounded-t-md",
                   results.length === 0 && "rounded-md",

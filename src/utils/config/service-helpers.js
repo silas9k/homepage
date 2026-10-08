@@ -7,6 +7,7 @@ import checkAndCopyConfig, { CONF_DIR, getSettings, substituteEnvironmentVars } 
 import getDockerArguments from "utils/config/docker";
 import { getKubeConfig } from "utils/config/kubernetes";
 import * as shvl from "utils/config/shvl";
+import { prepareSilasGroups, substituteSilasValues } from "utils/config/silas";
 import { loadYaml } from "utils/config/yaml";
 import kubernetes from "utils/kubernetes/export";
 import createLogger from "utils/logger";
@@ -55,9 +56,10 @@ export async function servicesFromConfig() {
 
   const servicesYaml = path.join(CONF_DIR, "services.yaml");
   const rawFileContents = await fs.readFile(servicesYaml, "utf8");
-  const fileContents = substituteEnvironmentVars(rawFileContents);
-  const services = loadYaml(fileContents);
-  return parseServicesToGroups(services);
+  const services = rawFileContents.includes("silas:")
+    ? substituteSilasValues(loadYaml(rawFileContents), substituteEnvironmentVars)
+    : loadYaml(substituteEnvironmentVars(rawFileContents));
+  return prepareSilasGroups(parseServicesToGroups(services));
 }
 
 function flattenServices(groups, services = []) {
@@ -745,6 +747,7 @@ export function cleanServiceGroups(groups) {
             widget.interval = interval;
           }
         }
+        if (service.silas) widget.silas = true;
         return widget;
       });
       return cleanedService;

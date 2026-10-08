@@ -1,3 +1,4 @@
+import { join } from "path";
 import { describe, expect, it, vi } from "vitest";
 
 const { fs, yaml, config, checkAndCopyConfig } = vi.hoisted(() => ({
@@ -33,6 +34,6 @@ describe("utils/config/proxmox", () => {
 
     expect(getProxmoxConfig()).toEqual({ pve: { url: "http://pve" } });
     expect(checkAndCopyConfig).toHaveBeenCalledWith("proxmox.yaml");
-    expect(fs.readFileSync).toHaveBeenCalledWith("/conf/proxmox.yaml", "utf8");
+    expect(fs.readFileSync).toHaveBeenCalledWith(join("/conf", "proxmox.yaml"), "utf8");
   });
 });
