@@ -62,11 +62,8 @@ export default function Item({ service, groupName, useEqualHeights }) {
 
   const handleCardClick = (event) => {
     if (!isSilasLauncher) return;
-    if (
-      event.target !== event.currentTarget &&
-      event.target.closest("a, button, input, select, textarea, [role=button], [data-service-card-control]")
-    )
-      return;
+    const interactive = event.target.closest("a, button, input, select, textarea, [data-service-card-control]");
+    if (interactive && interactive !== event.currentTarget) return;
     openService();
   };
 
@@ -138,27 +135,26 @@ export default function Item({ service, groupName, useEqualHeights }) {
             </div>
           )}
 
-          {service.silas?.sshUrl && (
-            <a
-              href={service.silas.sshUrl}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="SSH öffnen"
-              title="SSH öffnen"
-              data-service-card-control
-              onClick={(event) => event.stopPropagation()}
-              onKeyDown={(event) => event.stopPropagation()}
-              className="shrink-0 flex items-center justify-center self-center w-7 h-7 mr-1 rounded text-theme-500 hover:text-theme-700 hover:bg-theme-300/20 dark:text-theme-300 dark:hover:text-theme-100 dark:hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-theme-500"
-            >
-              <FiTerminal aria-hidden="true" size={14} />
-            </a>
-          )}
-
           <div
             className={`absolute top-0 right-0 flex flex-row justify-end ${
               statusStyle === "dot" ? "gap-0" : "gap-2 mr-2"
             } z-10 service-tags`}
           >
+            {service.silas?.sshUrl && (
+              <a
+                href={service.silas.sshUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="SSH öffnen"
+                title="SSH öffnen"
+                data-service-card-control
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+                className="shrink-0 flex items-center justify-center w-7 h-7 rounded text-theme-500 hover:text-theme-700 hover:bg-theme-300/20 dark:text-theme-300 dark:hover:text-theme-100 dark:hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-theme-500"
+              >
+                <FiTerminal aria-hidden="true" size={14} />
+              </a>
+            )}
             {settings.silasTheme && service.silas?.site && (
               <span className="silas-site" title={service.silas.host}>
                 {service.silas.siteLabel ?? settings.silasSites?.[service.silas.site] ?? service.silas.site}

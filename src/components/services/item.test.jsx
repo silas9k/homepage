@@ -216,6 +216,7 @@ describe("components/services/item", () => {
         service={{
           id: "svc1",
           name: "debian-docker",
+          description: "Desc",
           href: "https://service.example.test",
           silas: { sshUrl: "ssh://USER@100.76.36.117", details: {} },
           widgets: [],
@@ -226,8 +227,14 @@ describe("components/services/item", () => {
 
     const card = screen.getByRole("button", { name: "debian-docker öffnen" });
     expect(card).not.toHaveAttribute("data-href");
-    fireEvent.click(card);
-    expect(screen.getByTestId("server-details")).toBeInTheDocument();
+    for (const target of [
+      screen.getByText("debian-docker"),
+      screen.getByText("Desc"),
+      screen.getByText("Nicht konfiguriert"),
+    ]) {
+      fireEvent.click(target);
+      expect(screen.getByTestId("server-details")).toBeInTheDocument();
+    }
     expect(open).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("link", { name: "SSH öffnen" }));
     expect(open).not.toHaveBeenCalled();
