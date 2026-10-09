@@ -34,6 +34,8 @@ function activateService(service) {
 export default function ServiceSearch({ services, isOpen, setSearching, searchString, setSearchString }) {
   const inputRef = useRef(null);
   const openerRef = useRef(null);
+  const skipFocusRestore = useRef(false);
+  const selectedResultRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const allServices = useMemo(() => flattenServices(services), [services]);
@@ -57,9 +59,12 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
   useEffect(() => {
     if (!isOpen) return undefined;
 
+    skipFocusRestore.current = false;
     openerRef.current = document.activeElement;
     inputRef.current?.focus();
-    return () => openerRef.current?.focus();
+    return () => {
+      if (openerRef.current && !skipFocusRestore.current) openerRef.current.focus();
+    };
   }, [isOpen]);
 
   const selectedIndex = Math.min(activeIndex, Math.max(0, results.length - 1));
@@ -70,9 +75,14 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
       (!service.silas?.details && (!service.href || service.href === "#"))
     )
       return;
+    skipFocusRestore.current = true;
     close();
-    requestAnimationFrame(() => activateService(service));
+    activateService(service);
   };
+
+  useEffect(() => {
+    selectedResultRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [selectedIndex]);
 
   const handleKeyDown = (event) => {
     if (event.key === "Escape") {
@@ -90,6 +100,8 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div
       className={classNames(
@@ -103,7 +115,7 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
         if (event.target === event.currentTarget) close();
       }}
     >
-      <div className="w-full max-w-xl overflow-hidden rounded-md border border-theme-300/60 bg-theme-50 shadow-xl dark:border-theme-700 dark:bg-theme-800">
+      <div className="flex max-h-[min(70vh,calc(100dvh-2rem))] w-full max-w-xl flex-col overflow-hidden rounded-md border border-theme-300/60 bg-theme-50 shadow-xl dark:border-theme-700 dark:bg-theme-800">
         <input
           ref={inputRef}
           value={searchString}
@@ -116,9 +128,13 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
           aria-label="Dienste suchen"
           aria-controls="silas-service-search-results"
           aria-activedescendant={results[selectedIndex] ? `silas-service-result-${selectedIndex}` : undefined}
-          className="w-full border-0 border-b border-theme-300/60 bg-transparent p-4 text-base text-theme-700 outline-none dark:border-theme-700 dark:text-theme-200"
+          className="w-full shrink-0 border-0 border-b border-theme-300/60 bg-transparent p-4 text-base text-theme-700 outline-none focus:border-theme-500 focus:ring-1 focus:ring-theme-500/30 dark:border-theme-700 dark:text-theme-200 dark:focus:border-theme-400 dark:focus:ring-theme-400/30"
         />
-        <ul id="silas-service-search-results" role="listbox" className="max-h-[60vh] overflow-y-auto p-2">
+        <ul
+          id="silas-service-search-results"
+          role="listbox"
+          className="silas-service-search-results min-h-0 flex-1 overflow-y-auto p-2"
+        >
           {results.length === 0 ? (
             <li className="p-4 text-sm text-theme-500" role="status">
               Keine Dienste gefunden
@@ -131,6 +147,7 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
                 <li
                   key={`${service.name}-${service.groupName}-${index}`}
                   id={`silas-service-result-${index}`}
+                  ref={index === selectedIndex ? selectedResultRef : undefined}
                   role="option"
                   aria-selected={index === selectedIndex}
                 >

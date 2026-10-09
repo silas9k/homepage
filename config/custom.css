@@ -52,10 +52,31 @@ body,
   text-align: left;
   cursor: pointer;
 }
+.silas-search:focus {
+  outline: none;
+}
+.silas-search:focus-visible {
+  outline: 2px solid #7b8777;
+  outline-offset: 2px;
+}
 .silas-search kbd {
   margin-left: auto;
   color: #656b63;
   font-size: 14px;
+}
+.silas-service-search-results {
+  scrollbar-width: thin;
+  scrollbar-color: #b7beb4 transparent;
+}
+.silas-service-search-results::-webkit-scrollbar {
+  width: 6px;
+}
+.silas-service-search-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+.silas-service-search-results::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #b7beb4;
 }
 #layout-groups,
 #services {
