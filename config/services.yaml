@@ -6,9 +6,17 @@
         siteMonitor: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
         silas:
           sshUrl: "{{HOMEPAGE_VAR_PROXMOX_SSH_URL}}"
+          details:
+            lanIp: "{{HOMEPAGE_VAR_PROXMOX_LAN_IP}}"
+            sshCommand: "ssh://root@{{HOMEPAGE_VAR_PROXMOX_LAN_IP}}"
+            links:
+              - label: Proxmox öffnen
+                href: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
           metrics:
             - CPU
             - RAM
+            - Storage
+            - Uptime
             - VMs
             - LXC
           site: a
@@ -27,6 +35,7 @@
           fields:
             - resources.cpu
             - resources.mem
+            - resources.disk
             - vms
             - lxc
     - debian-docker:

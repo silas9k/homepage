@@ -12,6 +12,10 @@ function percent(value) {
     : "—";
 }
 
+function proxmoxPercent(used, total) {
+  return Number.isFinite(used) && Number.isFinite(total) && total > 0 ? percent((used / total) * 100) : "—";
+}
+
 const defaultCpuSensorLabels = ["cpu_thermal", "Core", "Tctl", "Temperature"];
 
 export function getTemperature(sensors, preferredLabel) {
@@ -61,6 +65,8 @@ export default function ServerDetails({ service, onClose }) {
   const dialogRef = useRef(null);
   const copyTimer = useRef(null);
   const configuredWidget = service.widgets?.find((item) => item.type === "glances");
+  const proxmoxWidget = service.widgets?.find((item) => item.type === "proxmox");
+  const isProxmox = Boolean(proxmoxWidget);
   const widget = configuredWidget ?? { type: "glances", url: "" };
   const version = parseVersionForUrl(widget.version, 4);
   // Match the summary card's query/cache key so both display the same CPU sample.
@@ -69,10 +75,37 @@ export default function ServerDetails({ service, onClose }) {
   const disk = useWidgetAPI(widget, configuredWidget ? `${version}/fs` : "");
   const sensors = useWidgetAPI(widget, configuredWidget ? `${version}/sensors` : "", { refreshInterval: 60000 });
   const uptime = useWidgetAPI(widget, configuredWidget ? `${version}/uptime` : "", { refreshInterval: 60000 });
+  const proxmoxCluster = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "cluster/resources" : "");
+  const proxmoxNode = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "node/status" : "");
+  const proxmoxStorage = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "node/storage" : "");
   const filesystem = Array.isArray(disk.data) ? disk.data.find((item) => item.mnt_point === "/") : undefined;
   const details = service.silas.details;
   const temperature = formatTemperature(getTemperature(sensors.data, details.cpuSensorLabel));
   const formattedUptime = formatUptime(uptime.data);
+  const proxmoxItems = Array.isArray(proxmoxCluster.data?.data) ? proxmoxCluster.data.data : [];
+  const proxmoxNodes = proxmoxItems.filter(
+    (item) => item.type === "node" && (proxmoxWidget.node === undefined || item.node === proxmoxWidget.node),
+  );
+  const proxmoxNodeData = proxmoxNode.data?.data;
+  const proxmoxStorages = Array.isArray(proxmoxStorage.data?.data) ? proxmoxStorage.data.data : [];
+  const proxmoxVms = proxmoxItems.filter(
+    (item) =>
+      item.type === "qemu" &&
+      item.template === 0 &&
+      (proxmoxWidget.node === undefined || item.node === proxmoxWidget.node),
+  );
+  const proxmoxLxc = proxmoxItems.filter(
+    (item) =>
+      item.type === "lxc" &&
+      item.template === 0 &&
+      (proxmoxWidget.node === undefined || item.node === proxmoxWidget.node),
+  );
+  const proxmoxStorageTotal = proxmoxStorages.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+  const proxmoxStorageUsed = proxmoxStorages.reduce((sum, item) => sum + (Number(item.used) || 0), 0);
+  const proxmoxCpu = proxmoxNodes[0]?.cpu ?? proxmoxNodeData?.cpu;
+  const proxmoxMemoryUsed = proxmoxNodes[0]?.mem ?? proxmoxNodeData?.mem;
+  const proxmoxMemoryTotal = proxmoxNodes[0]?.maxmem ?? proxmoxNodeData?.maxmem;
+  const proxmoxUptime = formatUptime(proxmoxNodeData?.uptime);
 
   useEffect(() => {
     const previousFocus = document.activeElement;
@@ -154,11 +187,18 @@ export default function ServerDetails({ service, onClose }) {
         </div>
 
         <div className="grid grid-cols-3 gap-3 px-5 pt-5">
-          {[
-            ["CPU", percent(cpu.data?.total)],
-            ["RAM", percent(memory.data?.percent)],
-            ["Disk", percent(filesystem?.percent)],
-          ].map(([label, value]) => (
+          {(isProxmox
+            ? [
+                ["CPU", percent(Number.isFinite(proxmoxCpu) ? proxmoxCpu * 100 : undefined)],
+                ["RAM", proxmoxPercent(proxmoxMemoryUsed, proxmoxMemoryTotal)],
+                ["Storage", proxmoxPercent(proxmoxStorageUsed, proxmoxStorageTotal)],
+              ]
+            : [
+                ["CPU", percent(cpu.data?.total)],
+                ["RAM", percent(memory.data?.percent)],
+                ["Disk", percent(filesystem?.percent)],
+              ]
+          ).map(([label, value]) => (
             <div
               className="min-w-0 rounded-xl border border-theme-200/80 bg-white/70 px-2 py-4 text-center dark:border-white/10 dark:bg-white/5"
               key={label}
@@ -169,24 +209,37 @@ export default function ServerDetails({ service, onClose }) {
           ))}
         </div>
 
-        {(temperature || formattedUptime) && (
+        {(isProxmox ? proxmoxUptime : temperature || formattedUptime) && (
           <dl className="mx-5 mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-theme-200/80 bg-white/50 text-sm dark:border-white/10 dark:bg-white/5">
-            {temperature && (
+            {!isProxmox && temperature && (
               <div className="min-w-0 px-3 py-2.5">
                 <dt className="text-xs text-theme-500 dark:text-theme-300">Temperatur</dt>
                 <dd className="mt-0.5 font-medium tabular-nums">{temperature}</dd>
               </div>
             )}
-            {formattedUptime && (
+            {(isProxmox ? proxmoxUptime : formattedUptime) && (
               <div
-                className={`min-w-0 px-3 py-2.5 ${temperature ? "border-l border-theme-200/60 dark:border-white/10" : ""}`}
+                className={`min-w-0 px-3 py-2.5 ${!isProxmox && temperature ? "border-l border-theme-200/60 dark:border-white/10" : ""}`}
               >
                 <dt className="text-xs text-theme-500 dark:text-theme-300">Uptime</dt>
                 <dd className="mt-0.5 truncate font-medium tabular-nums" title={formattedUptime}>
-                  {formattedUptime}
+                  {isProxmox ? proxmoxUptime : formattedUptime}
                 </dd>
               </div>
             )}
+          </dl>
+        )}
+
+        {isProxmox && (
+          <dl className="mx-5 mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-theme-200/80 bg-white/50 text-sm dark:border-white/10 dark:bg-white/5">
+            <div className="min-w-0 px-3 py-2.5">
+              <dt className="text-xs text-theme-500 dark:text-theme-300">VMs</dt>
+              <dd className="mt-0.5 font-medium tabular-nums">{proxmoxVms.length}</dd>
+            </div>
+            <div className="min-w-0 border-l border-theme-200/60 px-3 py-2.5 dark:border-white/10">
+              <dt className="text-xs text-theme-500 dark:text-theme-300">LXC</dt>
+              <dd className="mt-0.5 font-medium tabular-nums">{proxmoxLxc.length}</dd>
+            </div>
           </dl>
         )}
 

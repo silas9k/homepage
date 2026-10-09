@@ -216,6 +216,33 @@ describe("components/services/item", () => {
     open.mockRestore();
   });
 
+  it("opens Proxmox details instead of navigating and keeps the nested quick link independent", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderWithProviders(
+      <Item
+        groupName="Server"
+        useEqualHeights={false}
+        service={{
+          id: "proxmox",
+          name: "Proxmox",
+          description: "ThinkCentre M920q",
+          href: "https://proxmox.example.test",
+          silas: { details: {} },
+          widgets: [{ type: "proxmox" }],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    const card = screen.getByRole("button", { name: "Proxmox öffnen" });
+    fireEvent.click(card);
+    expect(screen.getByTestId("server-details")).toBeInTheDocument();
+    expect(open).not.toHaveBeenCalled();
+    fireEvent.keyDown(card, { key: "Escape" });
+    expect(open).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
   it.each([
     ["a", undefined, "HOME A"],
     ["b", undefined, "HOME B"],

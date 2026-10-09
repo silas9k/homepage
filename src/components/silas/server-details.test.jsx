@@ -22,6 +22,19 @@ const service = {
   widgets: [{ type: "glances", version: 4, metric: "summary:/" }],
 };
 
+const proxmoxService = {
+  name: "Proxmox",
+  silas: {
+    host: "ThinkCentre M920q",
+    details: {
+      lanIp: "192.0.2.20",
+      sshCommand: "ssh://root@192.0.2.20",
+      links: [{ label: "Proxmox öffnen", href: "https://proxmox.example.test" }],
+    },
+  },
+  widgets: [{ type: "proxmox", node: "pve", url: "https://proxmox.example.test" }],
+};
+
 describe("components/silas/server-details", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -112,5 +125,50 @@ describe("components/silas/server-details", () => {
     unmount();
     expect(opener).toHaveFocus();
     opener.remove();
+  });
+
+  it("renders Proxmox metrics, actions, and mapped API requests", async () => {
+    useWidgetAPI.mockImplementation((_widget, path) => {
+      if (path === "cluster/resources") {
+        return {
+          data: {
+            data: [
+              { type: "node", node: "pve", status: "online", cpu: 0.25, mem: 50, maxmem: 100 },
+              { type: "qemu", node: "pve", template: 0, status: "running" },
+              { type: "lxc", node: "pve", template: 0, status: "stopped" },
+            ],
+          },
+        };
+      }
+      if (path === "node/status") return { data: { data: { cpu: 0.25, mem: 50, maxmem: 100, uptime: 90061 } } };
+      if (path === "node/storage") return { data: { data: [{ total: 1000, used: 250 }] } };
+      return {};
+    });
+
+    const onClose = vi.fn();
+    render(<ServerDetails service={proxmoxService} onClose={onClose} />);
+
+    expect(screen.getByRole("heading", { name: "Proxmox" })).toBeVisible();
+    expect(screen.getByText("ThinkCentre M920q")).toBeVisible();
+    expect(screen.getAllByText("25 %")).toHaveLength(2);
+    expect(screen.getByText("50 %")).toBeVisible();
+    expect(screen.getByText("1 Tag 1 Std.")).toBeVisible();
+    expect(screen.getAllByText("1")).toHaveLength(2);
+    expect(screen.getByText("192.0.2.20")).toBeVisible();
+    expect(screen.getByText("Storage")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Proxmox öffnen" })).toHaveAttribute(
+      "href",
+      "https://proxmox.example.test",
+    );
+    expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "proxmox", node: "pve" }), "node/status");
+    expect(useWidgetAPI).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "proxmox", node: "pve" }),
+      "node/storage",
+    );
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "SSH-Befehl kopieren" })));
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("ssh://root@192.0.2.20");
+    fireEvent.mouseDown(screen.getByRole("dialog").parentElement);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

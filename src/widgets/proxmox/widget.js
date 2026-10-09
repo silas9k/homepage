@@ -8,6 +8,12 @@ const widget = {
     "cluster/resources": {
       endpoint: "cluster/resources",
     },
+    "node/status": {
+      endpoint: "nodes/{node}/status",
+    },
+    "node/storage": {
+      endpoint: "nodes/{node}/storage",
+    },
   },
 };
 

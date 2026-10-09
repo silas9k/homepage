@@ -120,3 +120,82 @@ for (const [width, height] of [
     if (width === 1920) await page.screenshot({ path: "artifacts/server-cards-polish-1920x1080.png" });
   });
 }
+
+for (const [width, height] of [
+  [390, 844],
+  [320, 640],
+]) {
+  test(`Proxmox details at ${width}x${height}`, async ({ page, request, context }) => {
+    await page.setViewportSize({ width, height });
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const groups = await (await request.get("/api/services")).json();
+    const proxmox = groups
+      .find((group) => group.name === "Server")
+      .services.find((service) => service.name === "Proxmox");
+    proxmox.href = "https://proxmox.example.test";
+    proxmox.silas.details = {
+      lanIp: "192.0.2.20",
+      sshCommand: "ssh://root@192.0.2.20",
+      links: [{ label: "Proxmox öffnen", href: proxmox.href }],
+    };
+    proxmox.widgets = [
+      {
+        type: "proxmox",
+        node: "pve",
+        index: 0,
+        service_group: "Server",
+        service_name: "Proxmox",
+      },
+    ];
+    await page.route("**/api/services", (route) => route.fulfill({ json: groups }));
+    await page.route("**/api/services/proxy?*", (route) => {
+      const endpoint = new URL(route.request().url()).searchParams.get("endpoint");
+      const data =
+        endpoint === "cluster/resources"
+          ? {
+              data: [
+                { type: "node", node: "pve", status: "online", cpu: 0.25, mem: 50, maxmem: 100 },
+                { type: "qemu", node: "pve", template: 0, status: "running" },
+                { type: "lxc", node: "pve", template: 0, status: "stopped" },
+              ],
+            }
+          : endpoint === "node/status"
+            ? { data: { cpu: 0.25, mem: 50, maxmem: 100, uptime: 90061 } }
+            : { data: [{ total: 1000, used: 250 }] };
+      return route.fulfill({ json: data });
+    });
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const card = page.locator('.service[data-name="Proxmox"] .service-card');
+    await expect(card).toHaveAttribute("role", "button");
+    await card.click({ position: { x: 12, y: 80 } });
+    const dialog = page.getByRole("dialog", { name: "Proxmox", exact: true });
+    await expect(dialog).toBeVisible();
+    for (const value of ["25 %", "50 %", "25 %", "1 Tag 1 Std.", "192.0.2.20"]) {
+      await expect(dialog.getByText(value, { exact: true }).first()).toBeVisible();
+    }
+    await expect(dialog.getByText("VMs", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("LXC", { exact: true })).toBeVisible();
+    await expect(dialog).toContainText("Proxmox öffnen");
+    expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    await dialog.getByRole("button", { name: "SSH-Befehl kopieren" }).click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("ssh://root@192.0.2.20");
+    const quickLink = dialog.getByRole("link", { name: "Proxmox öffnen" });
+    await expect(quickLink).toHaveAttribute("href", proxmox.href);
+    const popupPromise = page.waitForEvent("popup");
+    await quickLink.click();
+    const popup = await popupPromise;
+    expect(await quickLink.getAttribute("href")).toBe(proxmox.href);
+    await popup.close();
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await card.click({ position: { x: 12, y: 80 } });
+    await expect(page.getByRole("dialog", { name: "Proxmox", exact: true })).toBeVisible();
+    await page.mouse.click(2, 2);
+    await expect(page.getByRole("dialog", { name: "Proxmox", exact: true })).toHaveCount(0);
+  });
+}
