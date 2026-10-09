@@ -180,7 +180,7 @@ export default function ServerDetails({ service, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Details schließen"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-theme-500 transition-colors hover:bg-theme-200/60 hover:text-theme-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-500 dark:text-theme-300 dark:hover:bg-white/10 dark:hover:text-theme-100"
+            className="silas-details-close flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-theme-500 transition-colors hover:bg-theme-200/60 hover:text-theme-800 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-500 dark:text-theme-300 dark:hover:bg-white/10 dark:hover:text-theme-100"
           >
             <FiX aria-hidden="true" size={18} />
           </button>

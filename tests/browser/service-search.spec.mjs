@@ -24,6 +24,12 @@ for (const [width, height] of [
     const dialog = page.getByRole("dialog", { name: "Dienste suchen" });
     const input = dialog.getByRole("textbox", { name: "Dienste suchen" });
     await expect(input).toBeFocused();
+    const inputFocusStyle = await input.evaluate((element) => {
+      const styles = getComputedStyle(element);
+      return { outlineStyle: styles.outlineStyle, boxShadow: styles.boxShadow };
+    });
+    expect(inputFocusStyle.outlineStyle).toBe("none");
+    expect(inputFocusStyle.boxShadow).toMatch(/123.*135.*119/);
     await input.fill("proxmox");
     await expect(dialog.getByRole("option", { name: /Proxmox/ })).toBeVisible();
     await input.press("Enter");
@@ -31,6 +37,21 @@ for (const [width, height] of [
     await expect(page.getByRole("dialog", { name: "Dienste suchen" })).toHaveCount(0);
     await expect(page.getByRole("dialog", { name: "Proxmox", exact: true })).toBeVisible();
     expect(await page.locator('[role="dialog"], [aria-modal="true"]').count()).toBe(1);
+    const closeButton = page.getByRole("button", { name: "Details schließen" });
+    await closeButton.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    const closeFocusStyle = await closeButton.evaluate((element) => {
+      const styles = getComputedStyle(element);
+      return {
+        outlineStyle: styles.outlineStyle,
+        outlineWidth: styles.outlineWidth,
+        outlineOffset: styles.outlineOffset,
+      };
+    });
+    expect(closeFocusStyle.outlineStyle).toBe("solid");
+    expect(closeFocusStyle.outlineWidth).toBe("2px");
+    expect(closeFocusStyle.outlineOffset).toBe("2px");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
     await page.keyboard.press("Escape");

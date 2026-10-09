@@ -274,6 +274,22 @@ input:focus-visible {
   outline-offset: 4px;
   border-radius: 4px;
 }
+.silas-details-close:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.silas-details-close:focus-visible {
+  outline: 2px solid #7b8777 !important;
+  outline-offset: 2px !important;
+}
+.silas-service-search-input:focus {
+  outline: none !important;
+  border-color: #b7beb4 !important;
+  box-shadow: 0 0 0 1px rgb(123 135 119 / 22%) !important;
+}
+.silas-service-search-input:focus-visible {
+  outline: none !important;
+}
 @media (max-width: 1000px) {
   #inner_wrapper > div {
     padding: 0 30px;

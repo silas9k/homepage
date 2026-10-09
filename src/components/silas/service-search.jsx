@@ -128,7 +128,7 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
           aria-label="Dienste suchen"
           aria-controls="silas-service-search-results"
           aria-activedescendant={results[selectedIndex] ? `silas-service-result-${selectedIndex}` : undefined}
-          className="w-full shrink-0 border-0 border-b border-theme-300/60 bg-transparent p-4 text-base text-theme-700 outline-none focus:border-theme-500 focus:ring-1 focus:ring-theme-500/30 dark:border-theme-700 dark:text-theme-200 dark:focus:border-theme-400 dark:focus:ring-theme-400/30"
+          className="silas-service-search-input w-full shrink-0 border-0 border-b border-theme-300/60 bg-transparent p-4 text-base text-theme-700 outline-none focus:border-theme-500 focus:ring-1 focus:ring-theme-500/30 dark:border-theme-700 dark:text-theme-200 dark:focus:border-theme-400 dark:focus:ring-theme-400/30"
         />
         <ul
           id="silas-service-search-results"
@@ -136,7 +136,7 @@ export default function ServiceSearch({ services, isOpen, setSearching, searchSt
           className="silas-service-search-results min-h-0 flex-1 overflow-y-auto p-2"
         >
           {results.length === 0 ? (
-            <li className="p-4 text-sm text-theme-500" role="status">
+            <li className="px-4 py-3 text-sm text-theme-500" role="status">
               Keine Dienste gefunden
             </li>
           ) : (
