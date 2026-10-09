@@ -21,8 +21,10 @@ for (const [width, height] of [
     await expect(page.locator('.service[data-name="Paperless-ngx"]')).toHaveCount(0);
     await expect(page.locator('.service[data-name="Resticwatch"]')).toHaveCount(1);
     await expect(page.locator('.service[data-name="Playit.gg"]')).toHaveCount(0);
-    await expect(page.locator('.service[data-name="Homebridge · Standort A"]')).toContainText("HOME A");
-    await expect(page.locator('.service[data-name="Homebridge · Standort B"]')).toContainText("HOME B");
+    await expect(page.locator('.service[data-name="Homebridge · Papa"]')).toContainText("PAPA");
+    await expect(page.locator('.service[data-name="Homebridge · Mama"]')).toContainText("MAMA");
+    await expect(page.locator('.service[data-name="Homebridge · Papa"]')).toContainText("Geplant");
+    await expect(page.locator('.service[data-name="Backup-HDD · Raspberry Pi"]')).toContainText("Geplant");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(await page.locator("#inner_wrapper").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
       true,
@@ -96,8 +98,8 @@ test("configured service cards launch their configured destination from the comp
       "Immich",
       "Jellyfin",
       "Home Assistant",
-      "Homebridge · Standort A",
-      "Homebridge · Standort B",
+      "Homebridge · Papa",
+      "Homebridge · Mama",
       "Crafty Controller",
       "Portainer",
       "Tailscale",

@@ -152,6 +152,9 @@
         href: "{{HOMEPAGE_VAR_IMMICH_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_IMMICH_HEALTH_URL}}"
         silas:
+          state: stopped
+          stateLabel: Gestoppt
+          stateNote: Bewusst pausiert
           site: a
           host: debian-docker
           metrics:
@@ -208,6 +211,9 @@
         href: "{{HOMEPAGE_VAR_HOMEASSISTANT_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_HOMEASSISTANT_HEALTH_URL}}"
         silas:
+          state: planned
+          stateLabel: Nicht eingerichtet
+          stateNote: Einrichtung folgt
           metrics:
             - Lichter an
             - Schalter an
@@ -227,6 +233,9 @@
         href: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_HEALTH_URL}}"
         silas:
+          state: planned
+          stateLabel: Geplant
+          stateNote: Einrichtung bei Papa
           metrics:
             - Updates
             - Bridges
@@ -396,13 +405,18 @@
         href: "{{HOMEPAGE_VAR_RESTICWATCH_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_RESTICWATCH_HEALTH_URL}}"
         silas:
-          note: Optional · nicht konfiguriert
+          state: planned
+          stateLabel: Später
+          stateNote: Noch nicht eingerichtet
     - Backup-HDD · Raspberry Pi:
         icon: /silas/icons/backup.svg
         description: Backupziel · geplant
         href: "{{HOMEPAGE_VAR_BACKUP_HDD_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_BACKUP_HDD_HEALTH_URL}}"
         silas:
+          state: planned
+          stateLabel: Geplant
+          stateNote: Backup-Ziel folgt
           site: b
           host: Raspberry Pi 5
           note: Geplant · noch keine Backup-Daten

@@ -48,6 +48,25 @@ describe("components/silas/status", () => {
 
     expect(screen.getByText("Nicht erreichbar")).toBeInTheDocument();
   });
+
+  it("shows an explicit planned state without polling", () => {
+    useSWR.mockReturnValue({ data: undefined, error: undefined });
+
+    renderStatus({ silas: { state: "planned", stateLabel: "Geplant", stateNote: "Einrichtung folgt" } });
+
+    expect(screen.getByText("Geplant")).toBeInTheDocument();
+    expect(screen.getByText("Einrichtung folgt")).toBeInTheDocument();
+    expect(useSWR).toHaveBeenCalledWith(null, { refreshInterval: 30000 });
+  });
+
+  it("shows an explicit stopped state without polling", () => {
+    useSWR.mockReturnValue({ data: undefined, error: undefined });
+
+    renderStatus({ silas: { state: "stopped", stateLabel: "Gestoppt" } });
+
+    expect(screen.getByText("Gestoppt")).toBeInTheDocument();
+    expect(useSWR).toHaveBeenCalledWith(null, { refreshInterval: 30000 });
+  });
 });
 
 function renderStatus(service) {

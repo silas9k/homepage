@@ -215,6 +215,28 @@ describe("components/services/item", () => {
     expect(screen.getByTitle("debian-docker")).toBeInTheDocument();
   });
 
+  it("renders an explicit planned state instead of empty metrics", () => {
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "Homebridge · Papa",
+          siteMonitor: "https://service.example.test/health",
+          silas: { state: "planned", stateLabel: "Geplant", stateNote: "Einrichtung bei Papa" },
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, showStats: false, statusStyle: "basic" } },
+    );
+
+    expect(screen.getByText("Geplant")).toBeInTheDocument();
+    expect(screen.getByText("Einrichtung bei Papa")).toBeInTheDocument();
+    expect(screen.queryByText("Metriken nicht konfiguriert")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("site-monitor")).not.toBeInTheDocument();
+  });
+
   it("toggles container stats on click when stats are hidden by default", () => {
     renderWithProviders(
       <Item

@@ -11,6 +11,7 @@ import Widget from "./widget";
 
 import ResolvedIcon from "components/resolvedicon";
 import EmptyMetrics from "components/silas/empty-metrics";
+import SilasState from "components/silas/state";
 import { SettingsContext } from "utils/contexts/settings";
 import Docker from "widgets/docker/component";
 import Kubernetes from "widgets/kubernetes/component";
@@ -148,6 +149,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
               </span>
             )}
             {settings.silasTheme &&
+              !service.silas?.state &&
               !service.siteMonitor &&
               !service.ping &&
               !service.container &&
@@ -167,7 +169,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
               </div>
             )}
 
-            {service.siteMonitor && (
+            {service.siteMonitor && !service.silas?.state && (
               <div className="shrink-0 flex items-center justify-center service-tag service-site-monitor">
                 <SiteMonitor groupName={groupName} serviceName={service.name} style={statusStyle} />
                 <span className="sr-only">Site monitor status</span>
@@ -256,12 +258,18 @@ export default function Item({ service, groupName, useEqualHeights }) {
           </div>
         )}
 
-        {settings.silasTheme && service.widgets.length === 0 && (
-          <EmptyMetrics groupName={groupName} service={service} />
+        {settings.silasTheme && service.silas?.state ? (
+          <SilasState service={service} />
+        ) : (
+          <>
+            {settings.silasTheme && service.widgets.length === 0 && (
+              <EmptyMetrics groupName={groupName} service={service} />
+            )}
+            {service.widgets.map((widget) => (
+              <Widget widget={widget} service={service} key={widget.index} />
+            ))}
+          </>
         )}
-        {service.widgets.map((widget) => (
-          <Widget widget={widget} service={service} key={widget.index} />
-        ))}
       </div>
     </li>
   );
