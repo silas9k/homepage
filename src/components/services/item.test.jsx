@@ -186,6 +186,34 @@ describe("components/services/item", () => {
     open.mockRestore();
   });
 
+  it("uses the configured SSH URL as the complete-card target for opted-in server cards", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "debian-docker",
+          href: "https://service.example.test",
+          silas: { sshUrl: "ssh://USER@100.76.36.117", primarySsh: true },
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    const card = screen.getByRole("link", { name: "debian-docker öffnen" });
+    expect(card).toHaveAttribute("data-href", "ssh://USER@100.76.36.117");
+    fireEvent.click(card);
+    expect(open).toHaveBeenCalledWith("ssh://USER@100.76.36.117", "_blank", "noopener,noreferrer");
+    fireEvent.click(screen.getByRole("link", { name: "SSH öffnen" }));
+    expect(open).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(open).toHaveBeenCalledTimes(2);
+    open.mockRestore();
+  });
+
   it("uses an optional per-card site label without changing the site assignment", () => {
     renderWithProviders(
       <Item

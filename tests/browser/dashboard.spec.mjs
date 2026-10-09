@@ -89,8 +89,6 @@ test("configured service cards launch their configured destination from the comp
   const destinations = Object.fromEntries(
     [
       "Proxmox",
-      "debian-docker",
-      "raspi",
       "Nextcloud",
       "Memos",
       "Vaultwarden",
@@ -133,6 +131,15 @@ test("configured service cards launch their configured destination from the comp
     await expect(sshLink).toHaveAttribute("title", "SSH öffnen");
     await sshLink.focus();
     await expect(sshLink).toBeFocused();
+  }
+
+  for (const [name, sshUrl] of [
+    ["debian-docker", "ssh://USER@100.76.36.117"],
+    ["raspi", "ssh://silas@100.70.7.74"],
+  ]) {
+    const card = page.locator(`.service[data-name="${name}"] .service-card`);
+    await expect(card).toHaveAttribute("data-href", sshUrl);
+    await expect(card).toHaveAttribute("tabindex", "0");
   }
 
   for (const [name, url] of Object.entries(destinations)) {

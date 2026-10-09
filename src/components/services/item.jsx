@@ -20,7 +20,8 @@ import ProxmoxVM from "widgets/proxmoxvm/component";
 export default function Item({ service, groupName, useEqualHeights }) {
   const hasLink = service.href && service.href !== "#";
   const { settings } = useContext(SettingsContext);
-  const isSilasLauncher = settings.silasTheme && hasLink;
+  const primaryHref = service.silas?.primarySsh ? service.silas.sshUrl : service.href;
+  const isSilasLauncher = settings.silasTheme && primaryHref && primaryHref !== "#";
   const showStats = service.showStats === false ? false : settings.showStats;
   const statusStyle = service.statusStyle !== undefined ? service.statusStyle : settings.statusStyle;
   const cardStyle =
@@ -44,10 +45,10 @@ export default function Item({ service, groupName, useEqualHeights }) {
   const openService = () => {
     const target = service.target ?? settings.target ?? "_blank";
     if (target === "_self") {
-      window.location.assign(service.href);
+      window.location.assign(primaryHref);
       return;
     }
-    window.open(service.href, target, "noopener,noreferrer");
+    window.open(primaryHref, target, "noopener,noreferrer");
   };
 
   const handleCardClick = (event) => {
@@ -68,7 +69,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
         role={isSilasLauncher ? "link" : undefined}
         tabIndex={isSilasLauncher ? 0 : undefined}
         aria-label={isSilasLauncher ? `${service.name} öffnen` : undefined}
-        data-href={isSilasLauncher ? service.href : undefined}
+        data-href={isSilasLauncher ? primaryHref : undefined}
         onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
         className={classNames(
