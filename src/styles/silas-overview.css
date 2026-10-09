@@ -43,6 +43,74 @@
   background: #9a7138;
 }
 
+.silas-attention-center {
+  margin: -20px 0 28px;
+  padding: 14px 16px;
+  border: 1px solid #e3cfa8;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--silas-text);
+}
+
+.silas-attention-center h2 {
+  margin: 0 0 10px;
+  color: #80652f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.silas-attention-list {
+  display: grid;
+  gap: 7px;
+}
+
+.silas-attention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: rgb(255 247 227 / 60%);
+}
+
+.silas-attention-item.critical {
+  background: rgb(247 232 232 / 70%);
+}
+
+.silas-attention-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  background: #c59b48;
+  color: #fffdf8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.silas-attention-item.critical .silas-attention-marker {
+  background: #a96a6a;
+}
+
+.silas-attention-item strong,
+.silas-attention-item span:last-child {
+  display: block;
+}
+
+.silas-attention-item strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.silas-attention-item span:last-child {
+  color: var(--silas-muted);
+  font-size: 12px;
+}
+
 @media (max-width: 600px) {
   .silas-system-overview {
     display: grid;
@@ -60,5 +128,10 @@
 
   .silas-overview-item + .silas-overview-item {
     border-left: 0;
+  }
+
+  .silas-attention-center {
+    margin: -8px 0 24px;
+    padding: 12px;
   }
 }

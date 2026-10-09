@@ -13,6 +13,7 @@ import BookmarksGroup from "components/bookmarks/group";
 import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
 import ServicesGroup from "components/services/group";
+import AttentionCenter from "components/silas/attention-center";
 import SilasHeader from "components/silas/header";
 import ServiceSearch from "components/silas/service-search";
 import SystemOverview from "components/silas/system-overview";
@@ -486,6 +487,7 @@ function Home({ initialSettings }) {
           <>
             <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
             <SystemOverview services={services} />
+            <AttentionCenter services={services} />
           </>
         ) : (
           <div

@@ -318,6 +318,7 @@
         icon: /silas/icons/minecraft.svg
         description: Java Edition · ThinkCentre
         silas:
+          attention: false
           site: a
           host: debian-docker
           metrics:
@@ -339,6 +340,7 @@
         icon: /silas/icons/minecraft.svg
         description: Java Edition · ThinkCentre
         silas:
+          attention: false
           site: a
           host: debian-docker
           metrics:
