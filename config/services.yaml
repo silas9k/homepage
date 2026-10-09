@@ -37,6 +37,7 @@
         silas:
           sshUrl: "{{HOMEPAGE_VAR_DEBIAN_SSH_URL}}"
           details:
+            cpuSensorLabel: Package id
             lanIp: "{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
             tailscaleIp: "{{HOMEPAGE_VAR_DEBIAN_TAILSCALE_IP}}"
             sshCommand: "ssh://{{HOMEPAGE_VAR_DEBIAN_SSH_USER}}@{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
@@ -69,6 +70,7 @@
         silas:
           sshUrl: "{{HOMEPAGE_VAR_RASPI_SSH_URL}}"
           details:
+            cpuSensorLabel: cpu_thermal
             lanIp: "{{HOMEPAGE_VAR_RASPI_LAN_IP}}"
             tailscaleIp: "{{HOMEPAGE_VAR_RASPI_TAILSCALE_IP}}"
             sshCommand: "ssh://{{HOMEPAGE_VAR_RASPI_SSH_USER}}@{{HOMEPAGE_VAR_RASPI_LAN_IP}}"

@@ -12,6 +12,49 @@ function percent(value) {
     : "—";
 }
 
+const defaultCpuSensorLabels = ["cpu_thermal", "Core", "Tctl", "Temperature"];
+
+export function getTemperature(sensors, preferredLabel) {
+  if (!Array.isArray(sensors)) return undefined;
+
+  const labels = [preferredLabel, ...defaultCpuSensorLabels].filter(Boolean);
+  for (const label of labels) {
+    const values = sensors
+      .filter((sensor) => sensor.type === "temperature_core" && sensor.label?.startsWith(label))
+      .map((sensor) => sensor.value)
+      .filter(Number.isFinite);
+    if (values.length > 0) return values.reduce((sum, value) => sum + value, 0) / values.length;
+  }
+
+  return undefined;
+}
+
+export function formatTemperature(value) {
+  return Number.isFinite(value)
+    ? `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(value)} °C`
+    : undefined;
+}
+
+export function formatUptime(value) {
+  let minutes;
+  if (Number.isFinite(value)) {
+    minutes = Math.floor(value / 60);
+  } else if (typeof value === "string") {
+    const match = value.match(/^(?:(\d+)\s+days?,\s*)?(\d{1,2}):(\d{2})(?::\d{2})?$/i);
+    if (!match) return undefined;
+    minutes = Number(match[1] ?? 0) * 24 * 60 + Number(match[2]) * 60 + Number(match[3]);
+  } else {
+    return undefined;
+  }
+
+  const days = Math.floor(minutes / (24 * 60));
+  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const remainingMinutes = minutes % 60;
+  if (days > 0) return `${days} ${days === 1 ? "Tag" : "Tage"}${hours > 0 ? ` ${hours} Std.` : ""}`;
+  if (hours > 0) return `${hours} Std.${remainingMinutes > 0 ? ` ${remainingMinutes} Min.` : ""}`;
+  return `${remainingMinutes} Min.`;
+}
+
 export default function ServerDetails({ service, onClose }) {
   const [copied, setCopied] = useState("");
   const titleId = useId();
@@ -24,8 +67,12 @@ export default function ServerDetails({ service, onClose }) {
   const cpu = useWidgetAPI(widget, configuredWidget ? `${version}/cpu` : "", { refreshInterval: 60000 });
   const memory = useWidgetAPI(widget, configuredWidget ? `${version}/mem` : "");
   const disk = useWidgetAPI(widget, configuredWidget ? `${version}/fs` : "");
+  const sensors = useWidgetAPI(widget, configuredWidget ? `${version}/sensors` : "", { refreshInterval: 60000 });
+  const uptime = useWidgetAPI(widget, configuredWidget ? `${version}/uptime` : "", { refreshInterval: 60000 });
   const filesystem = Array.isArray(disk.data) ? disk.data.find((item) => item.mnt_point === "/") : undefined;
   const details = service.silas.details;
+  const temperature = formatTemperature(getTemperature(sensors.data, details.cpuSensorLabel));
+  const formattedUptime = formatUptime(uptime.data);
 
   useEffect(() => {
     const previousFocus = document.activeElement;
@@ -122,8 +169,29 @@ export default function ServerDetails({ service, onClose }) {
           ))}
         </div>
 
+        {(temperature || formattedUptime) && (
+          <dl className="mx-5 mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-theme-200/80 bg-white/50 text-sm dark:border-white/10 dark:bg-white/5">
+            {temperature && (
+              <div className="min-w-0 px-3 py-2.5">
+                <dt className="text-xs text-theme-500 dark:text-theme-300">Temperatur</dt>
+                <dd className="mt-0.5 font-medium tabular-nums">{temperature}</dd>
+              </div>
+            )}
+            {formattedUptime && (
+              <div
+                className={`min-w-0 px-3 py-2.5 ${temperature ? "border-l border-theme-200/60 dark:border-white/10" : ""}`}
+              >
+                <dt className="text-xs text-theme-500 dark:text-theme-300">Uptime</dt>
+                <dd className="mt-0.5 truncate font-medium tabular-nums" title={formattedUptime}>
+                  {formattedUptime}
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
+
         {(details.lanIp || details.tailscaleIp) && (
-          <dl className="mx-5 mt-5 overflow-hidden rounded-xl border border-theme-200/80 bg-white/50 text-sm dark:border-white/10 dark:bg-white/5">
+          <dl className="mx-5 mt-3 overflow-hidden rounded-xl border border-theme-200/80 bg-white/50 text-sm dark:border-white/10 dark:bg-white/5">
             {details.lanIp && (
               <div className="flex items-center justify-between gap-4 border-b border-theme-200/60 px-3 py-2.5 dark:border-white/10">
                 <dt className="shrink-0 text-theme-500 dark:text-theme-300">LAN IP</dt>

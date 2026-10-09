@@ -14,6 +14,7 @@ import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
 import ServicesGroup from "components/services/group";
 import SilasHeader from "components/silas/header";
+import SystemOverview from "components/silas/system-overview";
 import Tab, { slugifyAndEncode } from "components/tab";
 import Revalidate from "components/toggles/revalidate";
 import Widget from "components/widgets/widget";
@@ -463,7 +464,10 @@ function Home({ initialSettings }) {
           setSearching={setSearching}
         />
         {settings.silasTheme ? (
-          <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
+          <>
+            <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
+            <SystemOverview services={services} />
+          </>
         ) : (
           <div
             id="information-widgets"
