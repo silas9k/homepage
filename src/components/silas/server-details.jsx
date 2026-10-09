@@ -20,7 +20,8 @@ export default function ServerDetails({ service, onClose }) {
   const configuredWidget = service.widgets?.find((item) => item.type === "glances");
   const widget = configuredWidget ?? { type: "glances", url: "" };
   const version = parseVersionForUrl(widget.version, 4);
-  const cpu = useWidgetAPI(widget, configuredWidget ? `${version}/cpu` : "");
+  // Match the summary card's query/cache key so both display the same CPU sample.
+  const cpu = useWidgetAPI(widget, configuredWidget ? `${version}/cpu` : "", { refreshInterval: 60000 });
   const memory = useWidgetAPI(widget, configuredWidget ? `${version}/mem` : "");
   const disk = useWidgetAPI(widget, configuredWidget ? `${version}/fs` : "");
   const filesystem = Array.isArray(disk.data) ? disk.data.find((item) => item.mnt_point === "/") : undefined;
