@@ -175,13 +175,16 @@ describe("components/services/item", () => {
       { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "View container stats" }));
+    const control = screen.getByRole("button", { name: "View container stats" });
+    fireEvent.keyDown(control, { key: "Enter" });
+    fireEvent.keyDown(control, { key: " " });
+    fireEvent.click(control);
     expect(screen.getByTestId("docker-widget")).toBeInTheDocument();
     expect(open).not.toHaveBeenCalled();
     open.mockRestore();
   });
 
-  it("opens the SSH launcher without opening the complete card", () => {
+  it.each(["debian-docker", "raspi"])("opens %s details without a redundant SSH launcher", (name) => {
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     renderWithProviders(
       <Item
@@ -189,33 +192,7 @@ describe("components/services/item", () => {
         useEqualHeights={false}
         service={{
           id: "svc1",
-          name: "Proxmox",
-          href: "https://service.example.test",
-          silas: { sshUrl: "ssh://silas@100.70.7.74" },
-          widgets: [],
-        }}
-      />,
-      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
-    );
-
-    const sshLink = screen.getByRole("link", { name: "SSH öffnen" });
-    expect(sshLink).toHaveAttribute("href", "ssh://silas@100.70.7.74");
-    fireEvent.click(sshLink);
-    expect(open).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("link", { name: "Proxmox öffnen" }));
-    expect(open).toHaveBeenCalledTimes(1);
-    open.mockRestore();
-  });
-
-  it("opens server details instead of launching SSH from an opted-in server card", () => {
-    const open = vi.spyOn(window, "open").mockImplementation(() => null);
-    renderWithProviders(
-      <Item
-        groupName="G"
-        useEqualHeights={false}
-        service={{
-          id: "svc1",
-          name: "debian-docker",
+          name,
           description: "Desc",
           href: "https://service.example.test",
           silas: { sshUrl: "ssh://USER@100.76.36.117", details: {} },
@@ -225,25 +202,26 @@ describe("components/services/item", () => {
       { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
     );
 
-    const card = screen.getByRole("button", { name: "debian-docker öffnen" });
+    const card = screen.getByRole("button", { name: `${name} öffnen` });
     expect(card).not.toHaveAttribute("data-href");
-    for (const target of [
-      screen.getByText("debian-docker"),
-      screen.getByText("Desc"),
-      screen.getByText("Nicht konfiguriert"),
-    ]) {
+    for (const target of [screen.getByText(name), screen.getByText("Desc"), screen.getByText("Nicht konfiguriert")]) {
       fireEvent.click(target);
       expect(screen.getByTestId("server-details")).toBeInTheDocument();
     }
     expect(open).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("link", { name: "SSH öffnen" }));
+    expect(screen.queryByRole("link", { name: "SSH öffnen" })).not.toBeInTheDocument();
     expect(open).not.toHaveBeenCalled();
     fireEvent.keyDown(card, { key: "Enter" });
     expect(screen.getByTestId("server-details")).toBeInTheDocument();
     open.mockRestore();
   });
 
-  it("uses an optional per-card site label without changing the site assignment", () => {
+  it.each([
+    ["a", undefined, "HOME A"],
+    ["b", undefined, "HOME B"],
+    ["a", "PAPA", "PAPA"],
+    ["b", "MAMA", "MAMA"],
+  ])("preserves site %s with label %s", (site, siteLabel, expected) => {
     renderWithProviders(
       <Item
         groupName="G"
@@ -252,7 +230,7 @@ describe("components/services/item", () => {
           id: "svc1",
           name: "Homebridge · Papa",
           href: "https://service.example.test",
-          silas: { site: "a", siteLabel: "PAPA", host: "debian-docker" },
+          silas: { site, siteLabel, host: "debian-docker" },
           widgets: [],
         }}
       />,
@@ -267,8 +245,7 @@ describe("components/services/item", () => {
       },
     );
 
-    expect(screen.getByText("PAPA")).toBeInTheDocument();
-    expect(screen.queryByText("HOME A")).not.toBeInTheDocument();
+    expect(screen.getByText(expected)).toBeInTheDocument();
     expect(screen.getByTitle("debian-docker")).toBeInTheDocument();
   });
 

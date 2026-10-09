@@ -121,17 +121,7 @@ test("configured service cards launch their configured destination from the comp
   await page.route("**/api/services", (route) => route.fulfill({ json: groups }));
   await page.goto("/", { waitUntil: "networkidle" });
 
-  for (const [name, sshUrl] of [
-    ["Proxmox", "ssh://silas@100.70.7.74"],
-    ["debian-docker", "ssh://USER@100.76.36.117"],
-    ["raspi", "ssh://silas@100.70.7.74"],
-  ]) {
-    const sshLink = page.locator(`.service[data-name="${name}"] a[aria-label="SSH öffnen"]`);
-    await expect(sshLink).toHaveAttribute("href", sshUrl);
-    await expect(sshLink).toHaveAttribute("title", "SSH öffnen");
-    await sshLink.focus();
-    await expect(sshLink).toBeFocused();
-  }
+  await expect(page.getByRole("link", { name: "SSH öffnen" })).toHaveCount(0);
 
   for (const name of ["debian-docker", "raspi"]) {
     const card = page.locator(`.service[data-name="${name}"] .service-card`);
