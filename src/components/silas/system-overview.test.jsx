@@ -12,6 +12,10 @@ const services = [
   {
     name: "Server",
     services: [
+      {
+        name: "Proxmox",
+        widgets: [{ type: "proxmox", node: "pve", service_name: "Proxmox" }],
+      },
       { name: "debian-docker", widgets: [{ type: "glances", version: 4, service_name: "debian-docker" }] },
       { name: "raspi", widgets: [{ type: "glances", version: 4, service_name: "raspi" }] },
     ],
@@ -38,6 +42,8 @@ describe("components/silas/system-overview", () => {
     vi.clearAllMocks();
     useWidgetAPI.mockImplementation((widget, endpoint) => {
       if (endpoint.endsWith("/cpu")) return { data: { total: widget.service_name === "raspi" ? 3.2 : 1.6 } };
+      if (endpoint === "cluster/resources")
+        return { data: { data: [{ type: "node", node: "pve", status: "online" }] } };
       if (endpoint === "docker/containers")
         return { data: [{ State: "running" }, { State: "running" }, { State: "exited" }] };
       if (endpoint === "cfd_tunnel") return { data: { result: { status: "healthy" } } };
@@ -49,7 +55,7 @@ describe("components/silas/system-overview", () => {
     const { container } = render(<SystemOverview services={services} />);
 
     expect(screen.getByLabelText("Systemübersicht")).toHaveClass("silas-system-overview");
-    expect(screen.getByLabelText("Hosts: 2 / 2 Hosts")).toBeVisible();
+    expect(screen.getByLabelText("Hosts: 3 / 3 Hosts")).toBeVisible();
     expect(screen.getByLabelText("Container: 2 Container aktiv")).toBeVisible();
     expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toBeVisible();
     expect(container.querySelectorAll(".silas-overview-item")).toHaveLength(3);
@@ -63,6 +69,10 @@ describe("components/silas/system-overview", () => {
       "4/cpu",
       { refreshInterval: 60000 },
     );
+    expect(useWidgetAPI).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "proxmox", node: "pve" }),
+      "cluster/resources",
+    );
     expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "portainer" }), "docker/containers", {
       all: 1,
     });
@@ -73,26 +83,29 @@ describe("components/silas/system-overview", () => {
     useWidgetAPI.mockImplementation((widget, endpoint) => {
       if (endpoint.endsWith("/cpu"))
         return widget.service_name === "raspi" ? { error: new Error("offline") } : { data: { total: 1.6 } };
+      if (endpoint === "cluster/resources")
+        return { data: { data: [{ type: "node", node: "pve", status: "online" }] } };
       if (endpoint === "docker/containers") return { data: [] };
       return { data: { result: { status: "healthy" } } };
     });
 
     render(<SystemOverview services={services} />);
 
-    expect(screen.getByLabelText("Hosts: 1 / 2 Hosts")).toBeVisible();
-    expect(screen.getByLabelText("Hosts: 1 / 2 Hosts").querySelector(".silas-overview-dot-warning")).toBeTruthy();
+    expect(screen.getByLabelText("Hosts: 2 / 3 Hosts")).toBeVisible();
+    expect(screen.getByLabelText("Hosts: 2 / 3 Hosts").querySelector(".silas-overview-dot-warning")).toBeTruthy();
   });
 
   it("reports zero hosts when both Glances CPU requests fail", () => {
     useWidgetAPI.mockImplementation((_widget, endpoint) => {
       if (endpoint.endsWith("/cpu")) return { error: new Error("offline") };
+      if (endpoint === "cluster/resources") return { error: new Error("offline") };
       if (endpoint === "docker/containers") return { data: [] };
       return { data: { result: { status: "healthy" } } };
     });
 
     render(<SystemOverview services={services} />);
 
-    expect(screen.getByLabelText("Hosts: 0 / 2 Hosts")).toBeVisible();
+    expect(screen.getByLabelText("Hosts: 0 / 3 Hosts")).toBeVisible();
   });
 
   it("uses clear unavailable fallbacks when configured widget data cannot be used", () => {
@@ -106,7 +119,7 @@ describe("components/silas/system-overview", () => {
 
   it("keeps a neutral host state while Glances CPU data is loading", () => {
     useWidgetAPI.mockImplementation((_widget, endpoint) => {
-      if (endpoint.endsWith("/cpu")) return {};
+      if (endpoint.endsWith("/cpu") || endpoint === "cluster/resources") return {};
       if (endpoint === "docker/containers") return { data: [] };
       return { data: { result: { status: "healthy" } } };
     });
@@ -114,7 +127,7 @@ describe("components/silas/system-overview", () => {
     render(<SystemOverview services={services} />);
 
     expect(screen.getByText("Hosts werden geprüft")).toBeVisible();
-    expect(screen.queryByText("0 / 2 Hosts")).not.toBeInTheDocument();
+    expect(screen.queryByText("0 / 3 Hosts")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Systemübersicht")).toHaveAttribute("aria-live", "polite");
   });
 });

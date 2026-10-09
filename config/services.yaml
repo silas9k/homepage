@@ -366,6 +366,18 @@
         silas:
           optional: true
 - Verwaltung & Netzwerk:
+    - Beszel:
+        icon: /silas/icons/beszel.svg
+        description: Server-Monitoring
+        href: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+        silas:
+          siteLabel: TAILSCALE
+        widget:
+          type: beszel
+          url: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+          fields:
+            - systems
+            - up
     - Portainer:
         icon: /silas/icons/portainer.svg
         description: Docker-Verwaltung

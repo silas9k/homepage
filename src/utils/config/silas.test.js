@@ -123,4 +123,22 @@ describe("silas configuration", () => {
       { site: "a" },
     ]);
   });
+
+  it("keeps Beszel as a private service with its native widget", () => {
+    const [service] = prepare({
+      name: "Beszel",
+      href: "http://100.70.7.74:8090",
+      silas: { siteLabel: "TAILSCALE" },
+      widget: {
+        type: "beszel",
+        url: "http://100.70.7.74:8090",
+        fields: ["systems", "up"],
+        silasRequired: ["url"],
+      },
+    });
+
+    expect(service.href).toBe("http://100.70.7.74:8090");
+    expect(service.silas.siteLabel).toBe("TAILSCALE");
+    expect(service.widgets).toEqual([{ type: "beszel", url: "http://100.70.7.74:8090", fields: ["systems", "up"] }]);
+  });
 });

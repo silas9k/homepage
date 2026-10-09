@@ -1,7 +1,7 @@
 import { parseVersionForUrl } from "utils/proxy/api-helpers";
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
-const HOSTS = ["debian-docker", "raspi"];
+const HOSTS = ["Proxmox", "debian-docker", "raspi"];
 
 function serviceWidget(service, type) {
   return service?.widgets?.find((widget) => widget.type === type);
@@ -18,10 +18,34 @@ function useGlancesHost(service) {
   return { configured, loading, online };
 }
 
+function useProxmoxHost(service) {
+  const widget = serviceWidget(service, "proxmox");
+  const result = useWidgetAPI(widget ?? {}, widget ? "cluster/resources" : "");
+  const configured = Boolean(widget);
+  const loading = configured && result.data === undefined && !result.error;
+  const nodes = Array.isArray(result.data?.data) ? result.data.data : [];
+  const online =
+    configured &&
+    !result.error &&
+    nodes.some((node) => {
+      if (node.type !== "node" || node.status !== "online") return false;
+      return !widget.node || node.node === widget.node;
+    });
+
+  return { configured, loading, online };
+}
+
+function useHostStatus(service) {
+  const glances = useGlancesHost(service);
+  const proxmox = useProxmoxHost(service);
+  return serviceWidget(service, "proxmox") ? proxmox : glances;
+}
+
 function HostOverview({ services }) {
-  const debian = useGlancesHost(services.find((service) => service.name === HOSTS[0]));
-  const raspi = useGlancesHost(services.find((service) => service.name === HOSTS[1]));
-  const hosts = [debian, raspi];
+  const proxmox = useHostStatus(services.find((service) => service.name === HOSTS[0]));
+  const debian = useHostStatus(services.find((service) => service.name === HOSTS[1]));
+  const raspi = useHostStatus(services.find((service) => service.name === HOSTS[2]));
+  const hosts = [proxmox, debian, raspi];
 
   if (hosts.some((host) => !host.configured)) {
     return <OverviewItem label="Hosts" value="Hosts nicht konfiguriert" state="unknown" />;
