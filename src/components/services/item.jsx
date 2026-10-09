@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import { useContext, useState } from "react";
+import { FiTerminal } from "react-icons/fi";
 
 import KubernetesStatus from "./kubernetes-status";
 import Ping from "./ping";
@@ -118,6 +119,22 @@ export default function Item({ service, groupName, useEqualHeights }) {
                 </p>
               </div>
             </div>
+          )}
+
+          {service.silas?.sshUrl && (
+            <a
+              href={service.silas.sshUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="SSH öffnen"
+              title="SSH öffnen"
+              data-service-card-control
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              className="shrink-0 flex items-center justify-center self-center w-7 h-7 mr-1 rounded text-theme-500 hover:text-theme-700 hover:bg-theme-300/20 dark:text-theme-300 dark:hover:text-theme-100 dark:hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-theme-500"
+            >
+              <FiTerminal aria-hidden="true" size={14} />
+            </a>
           )}
 
           <div

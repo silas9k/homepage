@@ -160,6 +160,32 @@ describe("components/services/item", () => {
     open.mockRestore();
   });
 
+  it("opens the SSH launcher without opening the complete card", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "Proxmox",
+          href: "https://service.example.test",
+          silas: { sshUrl: "ssh://silas@100.70.7.74" },
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    const sshLink = screen.getByRole("link", { name: "SSH öffnen" });
+    expect(sshLink).toHaveAttribute("href", "ssh://silas@100.70.7.74");
+    fireEvent.click(sshLink);
+    expect(open).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("link", { name: "Proxmox öffnen" }));
+    expect(open).toHaveBeenCalledTimes(1);
+    open.mockRestore();
+  });
+
   it("toggles container stats on click when stats are hidden by default", () => {
     renderWithProviders(
       <Item

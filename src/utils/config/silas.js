@@ -13,6 +13,16 @@ function safeUrl(value, protocols = ["https:", "http:"]) {
   }
 }
 
+function safeSshUrl(value) {
+  if (!configured(value)) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "ssh:" && url.hostname && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 // Resolve after YAML parsing so quotes/newlines in secrets remain literal values.
 export function substituteSilasValues(value, substitute) {
   if (typeof value === "string") return substitute(value);
@@ -35,6 +45,7 @@ export function prepareSilasGroups(groups) {
       for (const key of ["href", "siteMonitor"]) {
         if (!safeUrl(result[key])) delete result[key];
       }
+      if (!safeSshUrl(result.silas.sshUrl)) delete result.silas.sshUrl;
       if (result.silas.optional && !result.href) return [];
       const widgets = [result.widget, ...(result.widgets ?? [])].filter(Boolean);
       delete result.widget;

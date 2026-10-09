@@ -5,6 +5,7 @@
         href: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
         silas:
+          sshUrl: "{{HOMEPAGE_VAR_PROXMOX_SSH_URL}}"
           metrics:
             - CPU
             - RAM
@@ -34,6 +35,7 @@
         href: "{{HOMEPAGE_VAR_DEBIAN_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_DEBIAN_HEALTH_URL}}"
         silas:
+          sshUrl: "{{HOMEPAGE_VAR_DEBIAN_SSH_URL}}"
           metrics:
             - CPU
             - RAM
@@ -56,6 +58,7 @@
         href: "{{HOMEPAGE_VAR_RASPI_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_RASPI_HEALTH_URL}}"
         silas:
+          sshUrl: "{{HOMEPAGE_VAR_RASPI_SSH_URL}}"
           metrics:
             - CPU
             - RAM

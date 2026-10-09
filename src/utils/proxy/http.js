@@ -227,8 +227,27 @@ function homepageDNSLookupFn() {
 const homepageLookup = homepageDNSLookupFn();
 const agentCache = new Map();
 
-function getAgent(protocol, disableIpv6) {
-  const cacheKey = `${protocol}:${disableIpv6 ? "ipv4" : "auto"}`;
+function normalizeHostname(hostname) {
+  return hostname
+    .trim()
+    .replace(/^\[(.*)\]$/, "$1")
+    .toLowerCase();
+}
+
+function isTlsInsecureHost(hostname) {
+  const normalizedHostname = normalizeHostname(hostname);
+  const allowedHosts = (process.env.HOMEPAGE_TLS_INSECURE_HOSTS ?? "")
+    .split(",")
+    .map((host) => normalizeHostname(host))
+    .filter(Boolean);
+  return allowedHosts.includes(normalizedHostname);
+}
+
+function getAgent(protocol, disableIpv6, hostname) {
+  const tlsInsecure = protocol === "https:" && isTlsInsecureHost(hostname);
+  const cacheKey = `${protocol}:${normalizeHostname(hostname)}:${tlsInsecure ? "insecure" : "secure"}:${
+    disableIpv6 ? "ipv4" : "auto"
+  }`;
   const cachedAgent = agentCache.get(cacheKey);
   if (cachedAgent) {
     return cachedAgent;
@@ -242,7 +261,7 @@ function getAgent(protocol, disableIpv6) {
 
   const agent =
     protocol === "https:"
-      ? new https.Agent({ ...agentOptions, rejectUnauthorized: true })
+      ? new https.Agent({ ...agentOptions, rejectUnauthorized: !tlsInsecure })
       : new http.Agent(agentOptions);
 
   agentCache.set(cacheKey, agent);
@@ -255,12 +274,12 @@ export async function httpProxy(url, params = {}) {
   let request = null;
   if (constructedUrl.protocol === "https:") {
     request = httpsRequest(constructedUrl, {
-      agent: getAgent(constructedUrl.protocol, disableIpv6),
+      agent: getAgent(constructedUrl.protocol, disableIpv6, constructedUrl.hostname),
       ...params,
     });
   } else {
     request = httpRequest(constructedUrl, {
-      agent: getAgent(constructedUrl.protocol, disableIpv6),
+      agent: getAgent(constructedUrl.protocol, disableIpv6, constructedUrl.hostname),
       ...params,
     });
   }

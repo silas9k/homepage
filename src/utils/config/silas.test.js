@@ -37,6 +37,18 @@ describe("silas configuration", () => {
       expect(prepare({ name: "Service", silas: {}, href })[0].href).toBeUndefined();
     }
   });
+  it("keeps SSH launchers with usernames but rejects passwords and unsafe schemes", () => {
+    const [service] = prepare({
+      name: "Proxmox",
+      silas: { sshUrl: "ssh://silas@100.70.7.74" },
+    });
+    expect(service.silas.sshUrl).toBe("ssh://silas@100.70.7.74");
+
+    for (const sshUrl of ["ssh://silas:password@host", "https://host", "javascript:alert(1)"]) {
+      expect(prepare({ name: "Service", silas: { sshUrl } })[0].silas.sshUrl).toBeUndefined();
+    }
+  });
+
   it("preserves API credentials on the server and removes activation metadata", () => {
     const [service] = prepare({
       name: "Nextcloud",

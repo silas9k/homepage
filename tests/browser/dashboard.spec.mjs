@@ -110,8 +110,28 @@ test("configured service cards launch their configured destination from the comp
       if (destinations[service.name]) service.href = destinations[service.name];
     }
   }
+  for (const [name, sshUrl] of [
+    ["Proxmox", "ssh://silas@100.70.7.74"],
+    ["debian-docker", "ssh://USER@100.76.36.117"],
+    ["raspi", "ssh://silas@100.70.7.74"],
+  ]) {
+    const service = groups.flatMap((group) => group.services).find((item) => item.name === name);
+    service.silas = { ...(service.silas ?? {}), sshUrl };
+  }
   await page.route("**/api/services", (route) => route.fulfill({ json: groups }));
   await page.goto("/", { waitUntil: "networkidle" });
+
+  for (const [name, sshUrl] of [
+    ["Proxmox", "ssh://silas@100.70.7.74"],
+    ["debian-docker", "ssh://USER@100.76.36.117"],
+    ["raspi", "ssh://silas@100.70.7.74"],
+  ]) {
+    const sshLink = page.locator(`.service[data-name="${name}"] a[aria-label="SSH öffnen"]`);
+    await expect(sshLink).toHaveAttribute("href", sshUrl);
+    await expect(sshLink).toHaveAttribute("title", "SSH öffnen");
+    await sshLink.focus();
+    await expect(sshLink).toBeFocused();
+  }
 
   for (const [name, url] of Object.entries(destinations)) {
     const card = page.locator(`.service[data-name="${name}"] .service-card`);

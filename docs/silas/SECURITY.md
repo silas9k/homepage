@@ -40,7 +40,15 @@ Compose-Secrets verschlüsseln die Datei auf dem Host nicht. Host und Backups en
 
 ## TLS und Proxmox
 
-Im Fork ist `rejectUnauthorized: true` im zentralen HTTP-Proxy gesetzt. Ein nicht vertrauenswürdiges oder namensfremdes Zertifikat führt absichtlich zum Fehler. Bevorzugt ein gültiges Zertifikat mit passendem DNS-Namen verwenden. Alternativ die **öffentliche CA-Zertifikatsdatei** (niemals deren privaten Schlüssel) auf die VM kopieren und Folgendes in `.env` ergänzen:
+Im zentralen HTTP-Proxy bleibt die Zertifikatsprüfung standardmäßig aktiviert. Bevorzugt ein gültiges Zertifikat mit passendem DNS-Namen verwenden. Für einzelne interne Hosts mit selbst signiertem Zertifikat kann die Ausnahme über eine exakte Host-Allowlist konfiguriert werden:
+
+```dotenv
+HOMEPAGE_TLS_INSECURE_HOSTS=192.168.178.156
+```
+
+Die Liste ist kommasepariert, wird getrimmt, vergleicht Hostnamen/IP-Adressen ohne Port und deaktiviert die Prüfung ausschließlich für exakt passende HTTPS-Ziele. Leere Einträge werden ignoriert. Keine Wildcards, Teilstrings oder Credentials verwenden. `NODE_TLS_REJECT_UNAUTHORIZED=0` bleibt verboten.
+
+Alternativ die **öffentliche CA-Zertifikatsdatei** (niemals deren privaten Schlüssel) auf die VM kopieren und Folgendes in `.env` ergänzen:
 
 ```dotenv
 HOMEPAGE_CA_FILE=/absolute/path/to/homelab-ca.crt

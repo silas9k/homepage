@@ -314,6 +314,7 @@ describe("utils/proxy/http httpProxy", () => {
     state.lastAgentOptions = null;
     state.lastRequestParams = null;
     state.lastWrittenBody = null;
+    process.env.HOMEPAGE_TLS_INSECURE_HOSTS = "";
     process.env.HOMEPAGE_PROXY_DISABLE_IPV6 = "";
     vi.resetModules();
   });
@@ -413,6 +414,44 @@ describe("utils/proxy/http httpProxy", () => {
 
     await httpMod.httpProxy("https://example.com");
 
+    expect(state.lastAgentOptions.rejectUnauthorized).toBe(true);
+  });
+
+  it("disables TLS verification only for an explicitly allowlisted host", async () => {
+    process.env.HOMEPAGE_TLS_INSECURE_HOSTS = " 192.168.178.156 ";
+    const httpMod = await import("./http");
+
+    await httpMod.httpProxy("https://192.168.178.156:8006/api2/json");
+
+    expect(state.lastAgentOptions.rejectUnauthorized).toBe(false);
+  });
+
+  it("keeps TLS verification enabled for another hostname", async () => {
+    process.env.HOMEPAGE_TLS_INSECURE_HOSTS = "192.168.178.156";
+    const httpMod = await import("./http");
+
+    await httpMod.httpProxy("https://192.168.178.157:8006/api2/json");
+
+    expect(state.lastAgentOptions.rejectUnauthorized).toBe(true);
+  });
+
+  it("does not reuse an insecure agent for a secure host", async () => {
+    process.env.HOMEPAGE_TLS_INSECURE_HOSTS = "192.168.178.156";
+    const httpMod = await import("./http");
+
+    await httpMod.httpProxy("https://192.168.178.157:8006/api2/json");
+    const firstSecureAgent = state.lastAgent;
+    expect(state.lastAgentOptions.rejectUnauthorized).toBe(true);
+
+    await httpMod.httpProxy("https://192.168.178.156:8006/api2/json");
+    const insecureAgent = state.lastAgent;
+    expect(state.lastAgentOptions.rejectUnauthorized).toBe(false);
+
+    await httpMod.httpProxy("https://192.168.178.157:8006/api2/json");
+    const secondSecureAgent = state.lastAgent;
+
+    expect(insecureAgent).not.toBe(firstSecureAgent);
+    expect(secondSecureAgent).toBe(firstSecureAgent);
     expect(state.lastAgentOptions.rejectUnauthorized).toBe(true);
   });
 
