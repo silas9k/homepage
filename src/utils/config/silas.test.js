@@ -105,4 +105,22 @@ describe("silas configuration", () => {
     expect(services[1].widgets).toEqual([]);
     expect(services[1].silas.site).toBe("b");
   });
+
+  it("preserves optional per-card site label overrides", () => {
+    const services = prepareSilasGroups([
+      {
+        services: [
+          { name: "Homebridge · Papa", silas: { site: "a", siteLabel: "PAPA" } },
+          { name: "Homebridge · Mama", silas: { site: "b", siteLabel: "MAMA" } },
+          { name: "Proxmox", silas: { site: "a" } },
+        ],
+      },
+    ])[0].services;
+
+    expect(services.map((service) => service.silas)).toEqual([
+      { site: "a", siteLabel: "PAPA" },
+      { site: "b", siteLabel: "MAMA" },
+      { site: "a" },
+    ]);
+  });
 });

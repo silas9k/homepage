@@ -27,10 +27,11 @@ describe("widgets/nextcloud/component", () => {
       settings: { hideErrors: false },
     });
 
-    expect(container.querySelectorAll(".service-block")).toHaveLength(4);
+    expect(container.querySelectorAll(".service-block")).toHaveLength(5);
     expect(screen.queryByText("nextcloud.cpuload")).toBeNull();
     expect(screen.queryByText("nextcloud.memoryusage")).toBeNull();
     expect(screen.getByText("nextcloud.freespace")).toBeInTheDocument();
+    expect(screen.getByText("nextcloud.numusers")).toBeInTheDocument();
     expect(screen.getByText("nextcloud.activeusers")).toBeInTheDocument();
     expect(screen.getByText("nextcloud.numfiles")).toBeInTheDocument();
     expect(screen.getByText("nextcloud.numshares")).toBeInTheDocument();
@@ -48,7 +49,7 @@ describe("widgets/nextcloud/component", () => {
                 mem_free: "50",
                 freespace: 1024,
               },
-              storage: { num_files: 1 },
+              storage: { num_users: 7, num_files: 1 },
               shares: { num_shares: 2 },
             },
             activeUsers: { last24hours: 3 },
@@ -71,6 +72,7 @@ describe("widgets/nextcloud/component", () => {
     expect(screen.getByText("nextcloud.memoryusage")).toBeInTheDocument();
     expect(screen.getByText("nextcloud.freespace")).toBeInTheDocument();
     expect(screen.getByText("nextcloud.activeusers")).toBeInTheDocument();
+    expect(screen.queryByText("nextcloud.numusers")).toBeNull();
     expect(screen.queryByText("nextcloud.numfiles")).toBeNull();
     expect(screen.queryByText("nextcloud.numshares")).toBeNull();
 

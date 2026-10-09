@@ -40,6 +40,7 @@ export default function Component({ service }) {
         {showCpuLoad && <Block label="nextcloud.cpuload" />}
         {showMemoryUsage && <Block label="nextcloud.memoryusage" />}
         <Block label="nextcloud.freespace" />
+        <Block label="nextcloud.numusers" />
         <Block label="nextcloud.activeusers" />
         <Block label="nextcloud.numfiles" />
         <Block label="nextcloud.numshares" />
@@ -74,6 +75,7 @@ export default function Component({ service }) {
         value={t("common.bbytes", { value: nextcloudInfo.system.freespace, maximumFractionDigits: 1 })}
         highlightValue={nextcloudInfo.system.freespace}
       />
+      <Block label="nextcloud.numusers" value={t("common.number", { value: nextcloudInfo.storage.num_users })} />
       <Block label="nextcloud.activeusers" value={t("common.number", { value: activeUsers.last24hours })} />
       <Block label="nextcloud.numfiles" value={t("common.number", { value: nextcloudInfo.storage.num_files })} />
       <Block label="nextcloud.numshares" value={t("common.number", { value: nextcloudInfo.shares.num_shares })} />

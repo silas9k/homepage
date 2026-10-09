@@ -806,8 +806,9 @@
         "cpuload": "Cpu Load",
         "memoryusage": "Memory Usage",
         "freespace": "Free Space",
-        "activeusers": "Active Users",
-        "numfiles": "Files",
+        "numusers": "Total Users",
+        "activeusers": "Active 24h",
+        "numfiles": "Index Entries",
         "numshares": "Shared Items"
     },
     "kopia": {

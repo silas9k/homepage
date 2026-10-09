@@ -186,6 +186,35 @@ describe("components/services/item", () => {
     open.mockRestore();
   });
 
+  it("uses an optional per-card site label without changing the site assignment", () => {
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "svc1",
+          name: "Homebridge · Papa",
+          href: "https://service.example.test",
+          silas: { site: "a", siteLabel: "PAPA", host: "debian-docker" },
+          widgets: [],
+        }}
+      />,
+      {
+        settings: {
+          silasTheme: true,
+          silasSites: { a: "HOME A", b: "HOME B" },
+          target: "_blank",
+          showStats: false,
+          statusStyle: "basic",
+        },
+      },
+    );
+
+    expect(screen.getByText("PAPA")).toBeInTheDocument();
+    expect(screen.queryByText("HOME A")).not.toBeInTheDocument();
+    expect(screen.getByTitle("debian-docker")).toBeInTheDocument();
+  });
+
   it("toggles container stats on click when stats are hidden by default", () => {
     renderWithProviders(
       <Item

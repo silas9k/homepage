@@ -806,8 +806,9 @@
         "cpuload": "CPU Last",
         "memoryusage": "RAM Verbrauch",
         "freespace": "Freier Speicher",
-        "activeusers": "Aktive Nutzer",
-        "numfiles": "Dateien",
+        "numusers": "Nutzer gesamt",
+        "activeusers": "Aktiv 24h",
+        "numfiles": "Index-Einträge",
         "numshares": "Geteilte Elemente"
     },
     "kopia": {

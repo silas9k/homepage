@@ -144,7 +144,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
           >
             {settings.silasTheme && service.silas?.site && (
               <span className="silas-site" title={service.silas.host}>
-                {settings.silasSites?.[service.silas.site] ?? service.silas.site}
+                {service.silas.siteLabel ?? settings.silasSites?.[service.silas.site] ?? service.silas.site}
               </span>
             )}
             {settings.silasTheme &&
@@ -256,7 +256,9 @@ export default function Item({ service, groupName, useEqualHeights }) {
           </div>
         )}
 
-        {settings.silasTheme && service.widgets.length === 0 && <EmptyMetrics service={service} />}
+        {settings.silasTheme && service.widgets.length === 0 && (
+          <EmptyMetrics groupName={groupName} service={service} />
+        )}
         {service.widgets.map((widget) => (
           <Widget widget={widget} service={service} key={widget.index} />
         ))}

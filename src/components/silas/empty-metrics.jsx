@@ -1,7 +1,13 @@
-export default function EmptyMetrics({ service }) {
+import SilasStatus from "./status";
+
+export default function EmptyMetrics({ groupName, service }) {
   const labels = service.silas?.metrics ?? [];
+  if (service.siteMonitor || labels.length === 0) {
+    return <SilasStatus groupName={groupName} service={service} />;
+  }
+
   return (
-    <div className="silas-empty" aria-label={`${service.name}: Metriken nicht konfiguriert`}>
+    <div className="silas-empty" aria-label={`${service.name}: Nicht konfiguriert`}>
       {labels.length > 0 && (
         <div className="service-container">
           {labels.map((label) => (
@@ -14,9 +20,7 @@ export default function EmptyMetrics({ service }) {
           ))}
         </div>
       )}
-      <p className="silas-empty-caption">
-        {service.silas?.note ?? (service.href ? "Metriken nicht konfiguriert" : "Nicht konfiguriert")}
-      </p>
+      <p className="silas-empty-caption">{service.silas?.note ?? "Nicht konfiguriert"}</p>
     </div>
   );
 }

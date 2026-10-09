@@ -84,8 +84,9 @@
         silas:
           metrics:
             - Freier Speicher
-            - Aktive Nutzer
-            - Dateien
+            - Nutzer gesamt
+            - Aktiv 24h
+            - Index-Einträge
           site: a
           host: debian-docker
         widget:
@@ -94,6 +95,7 @@
           key: "{{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}"
           fields:
             - freespace
+            - numusers
             - activeusers
             - numfiles
           silasRequired:
@@ -219,7 +221,7 @@
           silasRequired:
             - url
             - key
-    - Homebridge · Standort A:
+    - Homebridge · Papa:
         icon: /silas/icons/homebridge.svg
         description: HomeKit Bridge · debian-docker
         href: "{{HOMEPAGE_VAR_HOMEBRIDGE_A_URL}}"
@@ -229,6 +231,7 @@
             - Updates
             - Bridges
           site: a
+          siteLabel: PAPA
           host: debian-docker
         widget:
           type: homebridge
@@ -242,7 +245,7 @@
             - url
             - username
             - password
-    - Homebridge · Standort B:
+    - Homebridge · Mama:
         icon: /silas/icons/homebridge.svg
         description: HomeKit Bridge · Raspberry Pi 5
         href: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_URL}}"
@@ -252,6 +255,7 @@
             - Updates
             - Bridges
           site: b
+          siteLabel: MAMA
           host: Raspberry Pi 5
         widget:
           type: homebridge
