@@ -14,6 +14,7 @@ import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
 import ServicesGroup from "components/services/group";
 import SilasHeader from "components/silas/header";
+import ServiceSearch from "components/silas/service-search";
 import SystemOverview from "components/silas/system-overview";
 import Tab, { slugifyAndEncode } from "components/tab";
 import Revalidate from "components/toggles/revalidate";
@@ -256,6 +257,14 @@ function Home({ initialSettings }) {
 
   useEffect(() => {
     function handleKeyDown(e) {
+      const editable =
+        e.target instanceof HTMLElement &&
+        (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || e.target.isContentEditable);
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !editable) {
+        e.preventDefault();
+        setSearching(true);
+        return;
+      }
       if (e.target.tagName === "BODY" || e.target.id === "inner_wrapper") {
         if (
           (e.key.length === 1 &&
@@ -456,13 +465,23 @@ function Home({ initialSettings }) {
           "relative m-auto flex flex-col justify-start z-10 h-full min-h-screen",
         )}
       >
-        <QuickLaunch
-          servicesAndBookmarks={servicesAndBookmarks}
-          searchString={searchString}
-          setSearchString={setSearchString}
-          isOpen={searching}
-          setSearching={setSearching}
-        />
+        {settings.silasTheme ? (
+          <ServiceSearch
+            services={services}
+            searchString={searchString}
+            setSearchString={setSearchString}
+            isOpen={searching}
+            setSearching={setSearching}
+          />
+        ) : (
+          <QuickLaunch
+            servicesAndBookmarks={servicesAndBookmarks}
+            searchString={searchString}
+            setSearchString={setSearchString}
+            isOpen={searching}
+            setSearching={setSearching}
+          />
+        )}
         {settings.silasTheme ? (
           <>
             <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />

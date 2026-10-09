@@ -10,7 +10,7 @@ export default function SilasHeader({ brand, onSearch }) {
       <button className="silas-search" type="button" onClick={onSearch}>
         <FiSearch aria-hidden="true" />
         <span>Dienste suchen</span>
-        <kbd aria-hidden="true">↵</kbd>
+        <kbd aria-hidden="true">Ctrl/⌘ K</kbd>
       </button>
     </header>
   );
