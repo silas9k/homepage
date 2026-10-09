@@ -276,6 +276,25 @@ describe("components/services/item", () => {
     expect(screen.getByTitle("debian-docker")).toBeInTheDocument();
   });
 
+  it("renders an explicit site label without requiring a site key", () => {
+    renderWithProviders(
+      <Item
+        groupName="G"
+        useEqualHeights={false}
+        service={{
+          id: "beszel",
+          name: "Beszel",
+          href: "https://beszel.example.test",
+          silas: { siteLabel: "TAILSCALE" },
+          widgets: [],
+        }}
+      />,
+      { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
+    );
+
+    expect(screen.getByText("TAILSCALE")).toBeInTheDocument();
+  });
+
   it("renders an explicit planned state instead of empty metrics", () => {
     renderWithProviders(
       <Item

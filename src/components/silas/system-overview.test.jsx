@@ -25,10 +25,13 @@ const services = [
     services: [
       {
         name: "Portainer",
+        href: "https://portainer.example.test",
         widgets: [{ type: "portainer", service_name: "Portainer", service_group: "Verwaltung & Netzwerk", index: 0 }],
       },
+      { name: "Beszel", href: "https://beszel.example.test", widgets: [] },
       {
         name: "Cloudflare Tunnel",
+        href: "https://cloudflare.example.test",
         widgets: [
           { type: "cloudflared", service_name: "Cloudflare Tunnel", service_group: "Verwaltung & Netzwerk", index: 0 },
         ],
@@ -58,6 +61,16 @@ describe("components/silas/system-overview", () => {
     expect(screen.getByLabelText("Hosts: 3 / 3 Hosts")).toBeVisible();
     expect(screen.getByLabelText("Container: 2 Container aktiv")).toBeVisible();
     expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toBeVisible();
+    expect(screen.getByLabelText("Hosts: 3 / 3 Hosts")).toHaveAttribute("href", "https://beszel.example.test");
+    expect(screen.getByLabelText("Container: 2 Container aktiv")).toHaveAttribute(
+      "href",
+      "https://portainer.example.test",
+    );
+    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toHaveAttribute(
+      "href",
+      "https://cloudflare.example.test",
+    );
+    expect(screen.getByText(/^Aktualisiert vor \d+s$/)).toBeVisible();
     expect(container.querySelectorAll(".silas-overview-item")).toHaveLength(3);
     expect(useWidgetAPI).toHaveBeenCalledWith(
       expect.objectContaining({ type: "glances", service_name: "debian-docker", version: 4 }),
@@ -129,5 +142,18 @@ describe("components/silas/system-overview", () => {
     expect(screen.getByText("Hosts werden geprüft")).toBeVisible();
     expect(screen.queryByText("0 / 3 Hosts")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Systemübersicht")).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("leaves shortcuts non-interactive when their destination is not configured", () => {
+    const servicesWithoutUrls = services.map((group) => ({
+      ...group,
+      services: group.services.map(({ href, ...service }) => service),
+    }));
+
+    render(<SystemOverview services={servicesWithoutUrls} />);
+
+    expect(screen.getByLabelText("Hosts: 3 / 3 Hosts").tagName).toBe("DIV");
+    expect(screen.getByLabelText("Container: 2 Container aktiv").tagName).toBe("DIV");
+    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy").tagName).toBe("DIV");
   });
 });

@@ -140,7 +140,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
               statusStyle === "dot" ? "gap-0" : "gap-2 mr-2"
             } z-10 service-tags`}
           >
-            {settings.silasTheme && service.silas?.site && (
+            {settings.silasTheme && (service.silas?.site || service.silas?.siteLabel) && (
               <span className="silas-site" title={service.silas.host}>
                 {service.silas.siteLabel ?? settings.silasSites?.[service.silas.site] ?? service.silas.site}
               </span>
