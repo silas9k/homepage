@@ -375,9 +375,16 @@
         widget:
           type: beszel
           url: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+          username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}"
+          version: 2
           fields:
             - systems
             - up
+          silasRequired:
+            - url
+            - username
+            - password
     - Portainer:
         icon: /silas/icons/portainer.svg
         description: Docker-Verwaltung
