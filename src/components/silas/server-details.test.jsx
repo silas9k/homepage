@@ -25,7 +25,15 @@ describe("components/silas/server-details", () => {
       <ServerDetails
         service={{
           name: "debian-docker",
-          silas: { host: "debian-docker", details: { lanIp: "192.168.1.10", sshCommand: "ssh user@host", links: [] } },
+          silas: {
+            host: "debian-docker",
+            details: {
+              lanIp: "192.168.1.10",
+              tailscaleIp: "100.64.0.10",
+              sshCommand: "ssh user@host",
+              links: [{ label: "Portainer", href: "https://portainer.example.test" }],
+            },
+          },
           widgets: [{ type: "glances", version: 4, metric: "summary:/" }],
         }}
         onClose={onClose}
@@ -36,6 +44,9 @@ describe("components/silas/server-details", () => {
     expect(screen.getByText("44,2 %")).toBeInTheDocument();
     expect(screen.getByText("31,1 %")).toBeInTheDocument();
     expect(screen.getByText("192.168.1.10")).toBeInTheDocument();
+    expect(screen.getByText("100.64.0.10")).toHaveClass("font-mono");
+    expect(screen.getByRole("link", { name: "Portainer" })).toHaveClass("rounded-lg");
+    expect(screen.getByRole("button", { name: "SSH-Befehl kopieren" })).toHaveClass("rounded-lg");
     fireEvent.click(screen.getByRole("button", { name: "IP kopieren" }));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("192.168.1.10");
     fireEvent.keyDown(document, { key: "Escape" });
