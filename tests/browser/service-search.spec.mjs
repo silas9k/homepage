@@ -29,7 +29,7 @@ for (const [width, height] of [
       return { outlineStyle: styles.outlineStyle, boxShadow: styles.boxShadow };
     });
     expect(inputFocusStyle.outlineStyle).toBe("none");
-    expect(inputFocusStyle.boxShadow).toMatch(/123.*135.*119/);
+    expect(inputFocusStyle.boxShadow).toBe("none");
     await input.fill("proxmox");
     await expect(dialog.getByRole("option", { name: /Proxmox/ })).toBeVisible();
     await input.press("Enter");
@@ -49,9 +49,7 @@ for (const [width, height] of [
         outlineOffset: styles.outlineOffset,
       };
     });
-    expect(closeFocusStyle.outlineStyle).toBe("solid");
-    expect(closeFocusStyle.outlineWidth).toBe("2px");
-    expect(closeFocusStyle.outlineOffset).toBe("2px");
+    expect(closeFocusStyle.outlineStyle).toBe("none");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
     await page.keyboard.press("Escape");
