@@ -36,7 +36,15 @@
         siteMonitor: "{{HOMEPAGE_VAR_DEBIAN_HEALTH_URL}}"
         silas:
           sshUrl: "{{HOMEPAGE_VAR_DEBIAN_SSH_URL}}"
-          primarySsh: true
+          details:
+            lanIp: "{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
+            tailscaleIp: "{{HOMEPAGE_VAR_DEBIAN_TAILSCALE_IP}}"
+            sshCommand: "ssh://{{HOMEPAGE_VAR_DEBIAN_SSH_USER}}@{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
+            links:
+              - label: Portainer
+                href: "{{HOMEPAGE_VAR_PORTAINER_URL}}"
+              - label: Crafty Controller
+                href: "{{HOMEPAGE_VAR_CRAFTY_URL}}"
           metrics:
             - CPU
             - RAM
@@ -60,7 +68,13 @@
         siteMonitor: "{{HOMEPAGE_VAR_RASPI_HEALTH_URL}}"
         silas:
           sshUrl: "{{HOMEPAGE_VAR_RASPI_SSH_URL}}"
-          primarySsh: true
+          details:
+            lanIp: "{{HOMEPAGE_VAR_RASPI_LAN_IP}}"
+            tailscaleIp: "{{HOMEPAGE_VAR_RASPI_TAILSCALE_IP}}"
+            sshCommand: "ssh://{{HOMEPAGE_VAR_RASPI_SSH_USER}}@{{HOMEPAGE_VAR_RASPI_LAN_IP}}"
+            links:
+              - label: Homebridge
+                href: "{{HOMEPAGE_VAR_HOMEBRIDGE_B_URL}}"
           metrics:
             - CPU
             - RAM

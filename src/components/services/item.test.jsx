@@ -59,6 +59,11 @@ vi.mock("./widget", () => ({
     return <div data-testid="service-widget">idx:{widget.index}</div>;
   },
 }));
+vi.mock("components/silas/server-details", () => ({
+  default: function ServerDetailsMock() {
+    return <div data-testid="server-details" />;
+  },
+}));
 
 import Item from "./item";
 
@@ -127,12 +132,28 @@ describe("components/services/item", () => {
     const card = screen.getByRole("link", { name: "My Service öffnen" });
     expect(card).toHaveAttribute("data-href", "https://service.example.test");
     expect(card).toHaveAttribute("tabindex", "0");
+    expect(card).toHaveClass(
+      "cursor-pointer",
+      "duration-200",
+      "hover:-translate-y-px",
+      "hover:inset-ring-black/15",
+      "focus-visible:outline-2",
+    );
     fireEvent.click(card);
     fireEvent.keyDown(card, { key: "Enter" });
     fireEvent.keyDown(card, { key: " " });
     expect(open).toHaveBeenCalledTimes(3);
     expect(open).toHaveBeenLastCalledWith("https://service.example.test", "_blank", "noopener,noreferrer");
     open.mockRestore();
+  });
+
+  it("does not add launcher hover affordances to non-clickable cards", () => {
+    renderWithProviders(
+      <Item groupName="G" useEqualHeights={false} service={{ id: "svc1", name: "Static Service", widgets: [] }} />,
+      { settings: { silasTheme: true, showStats: false, statusStyle: "basic" } },
+    );
+
+    expect(screen.getByText("Static Service").closest(".service-card")).not.toHaveClass("cursor-pointer");
   });
 
   it("does not launch a Silas card when an inner button is used", () => {
@@ -186,7 +207,7 @@ describe("components/services/item", () => {
     open.mockRestore();
   });
 
-  it("uses the configured SSH URL as the complete-card target for opted-in server cards", () => {
+  it("opens server details instead of launching SSH from an opted-in server card", () => {
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     renderWithProviders(
       <Item
@@ -196,21 +217,22 @@ describe("components/services/item", () => {
           id: "svc1",
           name: "debian-docker",
           href: "https://service.example.test",
-          silas: { sshUrl: "ssh://USER@100.76.36.117", primarySsh: true },
+          silas: { sshUrl: "ssh://USER@100.76.36.117", details: {} },
           widgets: [],
         }}
       />,
       { settings: { silasTheme: true, target: "_blank", showStats: false, statusStyle: "basic" } },
     );
 
-    const card = screen.getByRole("link", { name: "debian-docker öffnen" });
-    expect(card).toHaveAttribute("data-href", "ssh://USER@100.76.36.117");
+    const card = screen.getByRole("button", { name: "debian-docker öffnen" });
+    expect(card).not.toHaveAttribute("data-href");
     fireEvent.click(card);
-    expect(open).toHaveBeenCalledWith("ssh://USER@100.76.36.117", "_blank", "noopener,noreferrer");
+    expect(screen.getByTestId("server-details")).toBeInTheDocument();
+    expect(open).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("link", { name: "SSH öffnen" }));
-    expect(open).toHaveBeenCalledTimes(1);
+    expect(open).not.toHaveBeenCalled();
     fireEvent.keyDown(card, { key: "Enter" });
-    expect(open).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId("server-details")).toBeInTheDocument();
     open.mockRestore();
   });
 

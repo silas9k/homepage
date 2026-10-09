@@ -133,13 +133,14 @@ test("configured service cards launch their configured destination from the comp
     await expect(sshLink).toBeFocused();
   }
 
-  for (const [name, sshUrl] of [
-    ["debian-docker", "ssh://USER@100.76.36.117"],
-    ["raspi", "ssh://silas@100.70.7.74"],
-  ]) {
+  for (const name of ["debian-docker", "raspi"]) {
     const card = page.locator(`.service[data-name="${name}"] .service-card`);
-    await expect(card).toHaveAttribute("data-href", sshUrl);
+    await expect(card).not.toHaveAttribute("data-href");
     await expect(card).toHaveAttribute("tabindex", "0");
+    await card.click({ position: { x: 12, y: 12 } });
+    await expect(page.getByRole("dialog", { name: name })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: name })).not.toBeVisible();
   }
 
   for (const [name, url] of Object.entries(destinations)) {

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { FiTerminal } from "react-icons/fi";
 
 import KubernetesStatus from "./kubernetes-status";
@@ -11,6 +11,7 @@ import Widget from "./widget";
 
 import ResolvedIcon from "components/resolvedicon";
 import EmptyMetrics from "components/silas/empty-metrics";
+import ServerDetails from "components/silas/server-details";
 import SilasState from "components/silas/state";
 import { SettingsContext } from "utils/contexts/settings";
 import Docker from "widgets/docker/component";
@@ -20,8 +21,9 @@ import ProxmoxVM from "widgets/proxmoxvm/component";
 export default function Item({ service, groupName, useEqualHeights }) {
   const hasLink = service.href && service.href !== "#";
   const { settings } = useContext(SettingsContext);
-  const primaryHref = service.silas?.primarySsh ? service.silas.sshUrl : service.href;
-  const isSilasLauncher = settings.silasTheme && primaryHref && primaryHref !== "#";
+  const isDetailsLauncher = settings.silasTheme && service.silas?.details;
+  const primaryHref = service.href;
+  const isSilasLauncher = settings.silasTheme && ((service.href && service.href !== "#") || isDetailsLauncher);
   const showStats = service.showStats === false ? false : settings.showStats;
   const statusStyle = service.statusStyle !== undefined ? service.statusStyle : settings.statusStyle;
   const cardStyle =
@@ -30,6 +32,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
       : "shadow-md shadow-theme-900/10 dark:shadow-theme-900/20";
   const [statsOpen, setStatsOpen] = useState(service.showStats);
   const [statsClosing, setStatsClosing] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // set stats to closed after 300ms
   const closeStats = () => {
@@ -42,7 +45,13 @@ export default function Item({ service, groupName, useEqualHeights }) {
     }
   };
 
+  const closeDetails = useCallback(() => setDetailsOpen(false), []);
+
   const openService = () => {
+    if (isDetailsLauncher) {
+      setDetailsOpen(true);
+      return;
+    }
     const target = service.target ?? settings.target ?? "_blank";
     if (target === "_self") {
       window.location.assign(primaryHref);
@@ -53,7 +62,11 @@ export default function Item({ service, groupName, useEqualHeights }) {
 
   const handleCardClick = (event) => {
     if (!isSilasLauncher) return;
-    if (event.target.closest("a, button, input, select, textarea, [role=button], [data-service-card-control]")) return;
+    if (
+      event.target !== event.currentTarget &&
+      event.target.closest("a, button, input, select, textarea, [role=button], [data-service-card-control]")
+    )
+      return;
     openService();
   };
 
@@ -66,10 +79,11 @@ export default function Item({ service, groupName, useEqualHeights }) {
   return (
     <li key={service.name} id={service.id} className="service" data-name={service.name || ""}>
       <div
-        role={isSilasLauncher ? "link" : undefined}
+        role={isSilasLauncher ? (isDetailsLauncher ? "button" : "link") : undefined}
         tabIndex={isSilasLauncher ? 0 : undefined}
         aria-label={isSilasLauncher ? `${service.name} öffnen` : undefined}
-        data-href={isSilasLauncher ? primaryHref : undefined}
+        aria-haspopup={isDetailsLauncher ? "dialog" : undefined}
+        data-href={isDetailsLauncher ? undefined : isSilasLauncher ? service.href : undefined}
         onClick={handleCardClick}
         onKeyDown={handleCardKeyDown}
         className={classNames(
@@ -77,7 +91,8 @@ export default function Item({ service, groupName, useEqualHeights }) {
           useEqualHeights && "h-[calc(100%-0.5rem)]",
           cardStyle,
           "transition-all mb-2 p-1 rounded-md font-medium text-theme-700 dark:text-theme-200 dark:hover:text-theme-300 bg-theme-100/20 hover:bg-theme-300/20 dark:bg-white/5 dark:hover:bg-white/10 relative overflow-clip service-card",
-          isSilasLauncher && "silas-launcher",
+          isSilasLauncher &&
+            "silas-launcher cursor-pointer duration-200 hover:-translate-y-px hover:inset-ring-black/15 dark:hover:inset-ring-white/15 hover:bg-theme-300/30 dark:hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-500",
         )}
       >
         <div className="flex select-none z-0 service-title">
@@ -272,6 +287,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
           </>
         )}
       </div>
+      {detailsOpen && <ServerDetails service={service} onClose={closeDetails} />}
     </li>
   );
 }

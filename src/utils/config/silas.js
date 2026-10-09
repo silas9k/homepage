@@ -46,6 +46,14 @@ export function prepareSilasGroups(groups) {
         if (!safeUrl(result[key])) delete result[key];
       }
       if (!safeSshUrl(result.silas.sshUrl)) delete result.silas.sshUrl;
+      if (result.silas.details) {
+        const details = { ...result.silas.details };
+        for (const key of ["lanIp", "tailscaleIp", "sshCommand"]) {
+          if (!configured(details[key])) delete details[key];
+        }
+        details.links = (details.links ?? []).filter((link) => link?.label && safeUrl(link.href));
+        result.silas.details = details;
+      }
       if (result.silas.optional && !result.href) return [];
       const widgets = [result.widget, ...(result.widgets ?? [])].filter(Boolean);
       delete result.widget;
