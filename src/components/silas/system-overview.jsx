@@ -1,5 +1,4 @@
-import useSWR from "swr";
-
+import { parseVersionForUrl } from "utils/proxy/api-helpers";
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
 const HOSTS = ["debian-docker", "raspi"];
@@ -8,25 +7,29 @@ function serviceWidget(service, type) {
   return service?.widgets?.find((widget) => widget.type === type);
 }
 
-function hostRequest(groupName, serviceName) {
-  if (!groupName) return null;
-  return `/api/siteMonitor?${new URLSearchParams({ groupName, serviceName }).toString()}`;
+function useGlancesHost(service) {
+  const widget = serviceWidget(service, "glances");
+  const version = parseVersionForUrl(widget?.version, 4);
+  const result = useWidgetAPI(widget ?? {}, widget ? `${version}/cpu` : "", { refreshInterval: 60000 });
+  const configured = Boolean(widget);
+  const loading = configured && result.data === undefined && !result.error;
+  const online = configured && !result.error && Number.isFinite(result.data?.total);
+
+  return { configured, loading, online };
 }
 
-function isAvailable(result) {
-  return result?.data && !result.error && !result.data.error && result.data.status <= 403;
-}
+function HostOverview({ services }) {
+  const debian = useGlancesHost(services.find((service) => service.name === HOSTS[0]));
+  const raspi = useGlancesHost(services.find((service) => service.name === HOSTS[1]));
+  const hosts = [debian, raspi];
 
-function HostOverview({ groupName }) {
-  const debian = useSWR(hostRequest(groupName, HOSTS[0]), { refreshInterval: 30000 });
-  const raspi = useSWR(hostRequest(groupName, HOSTS[1]), { refreshInterval: 30000 });
-  const results = [debian, raspi];
-  const settled = results.every((result) => result.data || result.error);
-  const online = results.filter(isAvailable).length;
+  if (hosts.some((host) => !host.configured)) {
+    return <OverviewItem label="Hosts" value="Hosts nicht konfiguriert" state="unknown" />;
+  }
+  if (hosts.some((host) => host.loading))
+    return <OverviewItem label="Hosts" value="Hosts werden geprüft" state="unknown" />;
 
-  if (!groupName) return null;
-  if (!settled) return <OverviewItem label="Hosts" value="Hosts werden geprüft" state="unknown" />;
-
+  const online = hosts.filter((host) => host.online).length;
   return (
     <OverviewItem
       label="Hosts"
@@ -78,13 +81,14 @@ export function OverviewItem({ label, value, state }) {
 
 export default function SystemOverview({ services }) {
   const serverGroup = services?.find((group) => group.name === "Server");
+  const serverServices = serverGroup?.services ?? [];
   const allServices = services?.flatMap((group) => group.services ?? []) ?? [];
   const portainer = allServices.find((service) => service.name === "Portainer");
   const cloudflare = allServices.find((service) => service.name === "Cloudflare Tunnel");
 
   return (
     <section className="silas-system-overview" aria-label="Systemübersicht" aria-live="polite">
-      <HostOverview groupName={serverGroup?.name} />
+      <HostOverview services={serverServices} />
       <ContainersOverview service={portainer} />
       <TunnelOverview service={cloudflare} />
     </section>

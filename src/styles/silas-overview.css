@@ -1,0 +1,64 @@
+.silas-system-overview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  min-height: 46px;
+  margin: -22px 0 38px;
+  padding: 5px 12px;
+  border: 1px solid var(--silas-border, #dedfdb);
+  border-radius: 10px;
+  background: var(--silas-card, #fcfcfb);
+  color: var(--silas-muted, #60665f);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.silas-overview-item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 4px 14px;
+  white-space: nowrap;
+}
+
+.silas-overview-item + .silas-overview-item {
+  border-left: 1px solid var(--silas-border, #dedfdb);
+}
+
+.silas-overview-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: #a5aaa1;
+}
+
+.silas-overview-dot-healthy {
+  background: #3d7752;
+}
+
+.silas-overview-dot-warning {
+  background: #9a7138;
+}
+
+@media (max-width: 600px) {
+  .silas-system-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: -14px 0 30px;
+    padding: 5px 2px;
+  }
+
+  .silas-overview-item {
+    padding: 5px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .silas-overview-item + .silas-overview-item {
+    border-left: 0;
+  }
+}

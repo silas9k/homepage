@@ -3,14 +3,19 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { useSWR, useWidgetAPI } = vi.hoisted(() => ({ useSWR: vi.fn(), useWidgetAPI: vi.fn() }));
-vi.mock("swr", () => ({ default: useSWR }));
+const { useWidgetAPI } = vi.hoisted(() => ({ useWidgetAPI: vi.fn() }));
 vi.mock("utils/proxy/use-widget-api", () => ({ default: useWidgetAPI }));
 
 import SystemOverview from "./system-overview";
 
 const services = [
-  { name: "Server", services: [{ name: "debian-docker" }, { name: "raspi" }] },
+  {
+    name: "Server",
+    services: [
+      { name: "debian-docker", widgets: [{ type: "glances", version: 4, service_name: "debian-docker" }] },
+      { name: "raspi", widgets: [{ type: "glances", version: 4, service_name: "raspi" }] },
+    ],
+  },
   {
     name: "Verwaltung & Netzwerk",
     services: [
@@ -31,8 +36,8 @@ const services = [
 describe("components/silas/system-overview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useSWR.mockReturnValue({ data: { status: 200, latency: 4 } });
-    useWidgetAPI.mockImplementation((_widget, endpoint) => {
+    useWidgetAPI.mockImplementation((widget, endpoint) => {
+      if (endpoint.endsWith("/cpu")) return { data: { total: widget.service_name === "raspi" ? 3.2 : 1.6 } };
       if (endpoint === "docker/containers")
         return { data: [{ State: "running" }, { State: "running" }, { State: "exited" }] };
       if (endpoint === "cfd_tunnel") return { data: { result: { status: "healthy" } } };
@@ -48,22 +53,46 @@ describe("components/silas/system-overview", () => {
     expect(screen.getByLabelText("Container: 2 Container aktiv")).toBeVisible();
     expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toBeVisible();
     expect(container.querySelectorAll(".silas-overview-item")).toHaveLength(3);
-    expect(useSWR).toHaveBeenCalledWith("/api/siteMonitor?groupName=Server&serviceName=debian-docker", {
-      refreshInterval: 30000,
-    });
+    expect(useWidgetAPI).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "glances", service_name: "debian-docker", version: 4 }),
+      "4/cpu",
+      { refreshInterval: 60000 },
+    );
+    expect(useWidgetAPI).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "glances", service_name: "raspi", version: 4 }),
+      "4/cpu",
+      { refreshInterval: 60000 },
+    );
     expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "portainer" }), "docker/containers", {
       all: 1,
     });
     expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "cloudflared" }), "cfd_tunnel");
   });
 
-  it("reports an unavailable host with a textual warning, not only a colored dot", () => {
-    useSWR.mockReturnValueOnce({ data: { status: 200 } }).mockReturnValueOnce({ data: { status: 503 } });
+  it("reports one failed Glances host with a textual warning, not only a colored dot", () => {
+    useWidgetAPI.mockImplementation((widget, endpoint) => {
+      if (endpoint.endsWith("/cpu"))
+        return widget.service_name === "raspi" ? { error: new Error("offline") } : { data: { total: 1.6 } };
+      if (endpoint === "docker/containers") return { data: [] };
+      return { data: { result: { status: "healthy" } } };
+    });
 
     render(<SystemOverview services={services} />);
 
     expect(screen.getByLabelText("Hosts: 1 / 2 Hosts")).toBeVisible();
     expect(screen.getByLabelText("Hosts: 1 / 2 Hosts").querySelector(".silas-overview-dot-warning")).toBeTruthy();
+  });
+
+  it("reports zero hosts when both Glances CPU requests fail", () => {
+    useWidgetAPI.mockImplementation((_widget, endpoint) => {
+      if (endpoint.endsWith("/cpu")) return { error: new Error("offline") };
+      if (endpoint === "docker/containers") return { data: [] };
+      return { data: { result: { status: "healthy" } } };
+    });
+
+    render(<SystemOverview services={services} />);
+
+    expect(screen.getByLabelText("Hosts: 0 / 2 Hosts")).toBeVisible();
   });
 
   it("uses clear unavailable fallbacks when configured widget data cannot be used", () => {
@@ -75,12 +104,17 @@ describe("components/silas/system-overview", () => {
     expect(screen.getByText("Tunnel nicht verfügbar")).toBeVisible();
   });
 
-  it("keeps a safe structure while host data is loading", () => {
-    useSWR.mockReturnValue({});
+  it("keeps a neutral host state while Glances CPU data is loading", () => {
+    useWidgetAPI.mockImplementation((_widget, endpoint) => {
+      if (endpoint.endsWith("/cpu")) return {};
+      if (endpoint === "docker/containers") return { data: [] };
+      return { data: { result: { status: "healthy" } } };
+    });
 
     render(<SystemOverview services={services} />);
 
     expect(screen.getByText("Hosts werden geprüft")).toBeVisible();
+    expect(screen.queryByText("0 / 2 Hosts")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Systemübersicht")).toHaveAttribute("aria-live", "polite");
   });
 });

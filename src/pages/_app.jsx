@@ -4,6 +4,7 @@ import Head from "next/head";
 import "styles/globals.css";
 import "styles/manrope.css";
 import "styles/plex-mono.css";
+import "styles/silas-overview.css";
 import "styles/theme.css";
 import { SWRConfig } from "swr";
 
