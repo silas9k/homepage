@@ -13,13 +13,13 @@ Dedizierten Benutzer `homepage@pve` ohne Administratorrechte erstellen. Einen AP
 
 Das vorhandene Widget liefert CPU, RAM, VMs und LXC. Es liefert keine zuverlässige Dashboard-Zusammenfassung für physischen Samsung-SSD-Speicher oder Host-Uptime; diese Felder werden deshalb nicht vorgetäuscht. TLS siehe [Sicherheit](SECURITY.md). Grundlage: [Homepage-Proxmox-Dokumentation](https://gethomepage.dev/configs/proxmox/).
 
-## Debian und Raspberry Pi
+## Debian, Raspberry Pi und Proxmox
 
-Glances **4** mit Web-API auf dem jeweiligen Host einrichten. Eine native Glances-Installation misst den Host; ein isolierter Container kann stattdessen Container-Dateisysteme oder falsche Mounts liefern. Für die erste Einrichtung die Glances-API `/api/4/cpu`, `/api/4/mem` und `/api/4/fs` vom Dashboard-Netz aus prüfen. Nicht öffentlich exponieren. Glances muss keine Schreibrechte auf Docker erhalten.
+Beszel ist die einzige Quelle für generische Hostgesundheit. Die drei Einträge werden über ihre konfigurierten `silas.beszelSystemId`-Werte (`debian-docker`, `raspi`, `proxmox`) der Beszel-Systemsammlung zugeordnet. Homepage verwendet den vorhandenen authentifizierten Beszel-Proxy und fragt die Sammlung gemeinsam mit 60 Sekunden SWR-Cache ab.
 
-`HOMEPAGE_VAR_DEBIAN_GLANCES_URL` und `HOMEPAGE_VAR_RASPI_GLANCES_URL` enthalten jeweils die Basis-URL ohne `/api/4`. Optional User/Password für Basic Auth am internen Proxy setzen. `*_HEALTH_URL` darf auf einen nur intern zugänglichen Health-Endpunkt zeigen. `*_URL` ist der separat wählbare Browserlink zur Verwaltung.
+CPU, RAM, Disk, Uptime und die von Beszel gelieferte Dashboard-Temperatur werden nur angezeigt, wenn die entsprechenden Werte in `info` numerisch vorhanden sind. Fehlende Temperaturdaten werden als nicht verfügbar behandelt, nicht als 0. Containerzahlen erscheinen weiterhin in Portainer. Proxmox-VMs, LXCs und Storage bleiben native Proxmox-Daten.
 
-Die kleine Glances-Erweiterung `metric: "summary:/"` zeigt CPU, RAM und das Dateisystem mit `mnt_point: /`. Für die Pi-Backupplatte kann stattdessen `summary:/mnt/backup` gesetzt werden. Ein fehlender Mount wird als `—` gezeigt, niemals als 0 %. Containerzahlen erscheinen in Portainer. Zusätzliche Glances-Netzwerk-/Containerwidgets bleiben upstream verfügbar, sind wegen der kompakten Standardansicht nicht eingeschaltet.
+`HOMEPAGE_VAR_BESZEL_URL`, `HOMEPAGE_VAR_BESZEL_USERNAME` und `HOMEPAGE_VAR_BESZEL_PASSWORD` konfigurieren den bestehenden Beszel-Proxy. `*_HEALTH_URL` darf auf einen nur intern zugänglichen Health-Endpunkt zeigen. `*_URL` ist der separat wählbare Browserlink zur Verwaltung.
 
 ## Nextcloud und Vaultwarden
 

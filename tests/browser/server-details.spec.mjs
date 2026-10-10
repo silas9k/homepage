@@ -26,18 +26,13 @@ for (const [width, height] of [
           href: `http://127.0.0.1:3100/test-link/${encodeURIComponent(label)}`,
         })),
       };
-      service.widgets = [
-        {
-          type: "glances",
-          metric: "summary:/",
-          version: 4,
-          index: 0,
-          silas: true,
-          service_group: "Server",
-          service_name: name,
-        },
-      ];
+      service.silas.beszelSystemId = name;
+      service.widgets = [];
     }
+    const management = groups.find((group) => group.name === "Verwaltung & Netzwerk");
+    management.services.find((service) => service.name === "Beszel").widgets = [
+      { type: "beszel", service_name: "Beszel", service_group: management.name },
+    ];
     await page.route("**/api/services", (route) => route.fulfill({ json: groups }));
     await page.route("**/api/siteMonitor?*", (route) =>
       route.fulfill({ json: { status: route.request().url().includes("debian-docker") ? 200 : 503, latency: 10 } }),
@@ -45,11 +40,20 @@ for (const [width, height] of [
     await page.route("**/api/services/proxy?*", (route) => {
       const endpoint = new URL(route.request().url()).searchParams.get("endpoint");
       return route.fulfill({
-        json: endpoint.endsWith("cpu")
-          ? { total: 21.1 }
-          : endpoint.endsWith("mem")
-            ? { percent: 29.9 }
-            : [{ mnt_point: "/", percent: 22.6 }],
+        json:
+          endpoint === "systems"
+            ? {
+                items: [
+                  {
+                    id: "debian-docker",
+                    name: "debian-docker",
+                    status: "up",
+                    info: { cpu: 21.1, mp: 29.9, dp: 22.6, u: 286320, dt: 42.4 },
+                  },
+                  { id: "raspi", name: "raspi", status: "up", info: { cpu: 21.1, mp: 29.9, dp: 22.6, u: 286320 } },
+                ],
+              }
+            : { error: "Unexpected browser fixture endpoint" },
       });
     });
     await context.route("**/test-link/**", (route) => route.fulfill({ body: "Test destination" }));

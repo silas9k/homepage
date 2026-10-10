@@ -21,6 +21,7 @@
             - LXC
           site: a
           host: ThinkCentre M920q
+          beszelSystemId: proxmox
         widget:
           type: proxmox
           url: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
@@ -46,7 +47,6 @@
         silas:
           sshUrl: "{{HOMEPAGE_VAR_DEBIAN_SSH_URL}}"
           details:
-            cpuSensorLabel: Package id
             lanIp: "{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
             tailscaleIp: "{{HOMEPAGE_VAR_DEBIAN_TAILSCALE_IP}}"
             sshCommand: "ssh://{{HOMEPAGE_VAR_DEBIAN_SSH_USER}}@{{HOMEPAGE_VAR_DEBIAN_LAN_IP}}"
@@ -61,16 +61,24 @@
             - Disk
           site: a
           host: debian-docker
+          beszelSystemId: debian-docker
         widget:
-          type: glances
-          url: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_URL}}"
-          username: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_USER}}"
-          password: "{{HOMEPAGE_VAR_DEBIAN_GLANCES_PASSWORD}}"
-          version: 4
-          metric: summary:/
-          refreshInterval: 60000
+          type: beszel
+          url: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+          username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}"
+          version: 2
+          systemId: debian-docker
+          fields:
+            - name
+            - status
+            - cpu
+            - memory
+            - disk
           silasRequired:
             - url
+            - username
+            - password
     - raspi:
         icon: /silas/icons/raspberry-pi.svg
         description: Raspberry Pi 5 · Homebridge & Backups
@@ -79,7 +87,6 @@
         silas:
           sshUrl: "{{HOMEPAGE_VAR_RASPI_SSH_URL}}"
           details:
-            cpuSensorLabel: cpu_thermal
             lanIp: "{{HOMEPAGE_VAR_RASPI_LAN_IP}}"
             tailscaleIp: "{{HOMEPAGE_VAR_RASPI_TAILSCALE_IP}}"
             sshCommand: "ssh://{{HOMEPAGE_VAR_RASPI_SSH_USER}}@{{HOMEPAGE_VAR_RASPI_LAN_IP}}"
@@ -92,16 +99,24 @@
             - Disk
           site: b
           host: Raspberry Pi 5
+          beszelSystemId: raspi
         widget:
-          type: glances
-          url: "{{HOMEPAGE_VAR_RASPI_GLANCES_URL}}"
-          username: "{{HOMEPAGE_VAR_RASPI_GLANCES_USER}}"
-          password: "{{HOMEPAGE_VAR_RASPI_GLANCES_PASSWORD}}"
-          version: 4
-          metric: summary:/
-          refreshInterval: 60000
+          type: beszel
+          url: "{{HOMEPAGE_VAR_BESZEL_URL}}"
+          username: "{{HOMEPAGE_VAR_BESZEL_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}"
+          version: 2
+          systemId: raspi
+          fields:
+            - name
+            - status
+            - cpu
+            - memory
+            - disk
           silasRequired:
             - url
+            - username
+            - password
 - Cloud & Dokumente:
     - Nextcloud:
         icon: /silas/icons/nextcloud.svg
@@ -208,6 +223,9 @@
         href: "{{HOMEPAGE_VAR_JELLYFIN_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_JELLYFIN_HEALTH_URL}}"
         silas:
+          state: stopped
+          stateLabel: Gestoppt
+          stateNote: Noch keine Filme vorhanden
           metrics:
             - Filme
             - Serien

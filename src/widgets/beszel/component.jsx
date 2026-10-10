@@ -2,7 +2,7 @@ import { useTranslation } from "next-i18next/pages";
 
 import Block from "components/services/widget/block";
 import Container from "components/services/widget/container";
-import useWidgetAPI from "utils/proxy/use-widget-api";
+import { useBeszelSystems } from "components/silas/beszel-host-data";
 import withWidgetFields from "utils/widget-fields";
 
 const SUMMARY_FIELDS = ["systems", "up"];
@@ -16,15 +16,13 @@ export default function Component({ service: configuredService }) {
   const { widget } = service;
   const { systemId } = widget;
 
-  const { data: systems, error: systemsError } = useWidgetAPI(widget, "systems");
+  const { systems, error: systemsError } = useBeszelSystems(widget);
 
   let system = null;
   let finalError = systemsError;
 
-  if (systems && !systems.items) {
-    finalError = { message: "No items returned from beszel API" };
-  } else if (systems && systems.items && systemId) {
-    system = systems.items.find((item) => item.id === systemId || item.name === systemId);
+  if (systems && systemId) {
+    system = systems.find((item) => item.id === systemId || item.name === systemId);
     if (!system) {
       finalError = { message: `System with id ${systemId} not found` };
     }
@@ -48,37 +46,37 @@ export default function Component({ service: configuredService }) {
       <Container service={service}>
         <Block label="beszel.name" value={system.name} />
         <Block label="beszel.status" value={t(`beszel.${system.status}`)} />
-        <Block label="beszel.updated" value={t("common.relativeDate", { value: system.updated })} />
+        <Block label="beszel.updated" value={t("common.relativeDate", { value: system.updatedAt })} />
         <Block
           label="beszel.cpu"
-          value={t("common.percent", { value: system.info.cpu, maximumFractionDigits: 2 })}
-          highlightValue={system.info.cpu}
+          value={t("common.percent", { value: system.cpuPercent, maximumFractionDigits: 2 })}
+          highlightValue={system.cpuPercent}
         />
         <Block
           label="beszel.memory"
-          value={t("common.percent", { value: system.info.mp, maximumFractionDigits: 2 })}
-          highlightValue={system.info.mp}
+          value={t("common.percent", { value: system.memoryPercent, maximumFractionDigits: 2 })}
+          highlightValue={system.memoryPercent}
         />
         <Block
           label="beszel.disk"
-          value={t("common.percent", { value: system.info.dp, maximumFractionDigits: 2 })}
-          highlightValue={system.info.dp}
+          value={t("common.percent", { value: system.diskPercent, maximumFractionDigits: 2 })}
+          highlightValue={system.diskPercent}
         />
         <Block
           label="beszel.network"
-          value={t("common.byterate", { value: system.info.bb, maximumFractionDigits: 2 })}
-          highlightValue={system.info.bb}
+          value={t("common.byterate", { value: system.networkBandwidth, maximumFractionDigits: 2 })}
+          highlightValue={system.networkBandwidth}
         />
       </Container>
     );
   }
 
-  const upTotal = systems.items.filter((item) => item.status === "up").length;
+  const upTotal = systems.filter((item) => item.online).length;
 
   return (
     <Container service={service}>
-      <Block label="beszel.systems" value={systems.totalItems} />
-      <Block label="beszel.up" value={`${upTotal} / ${systems.totalItems}`} />
+      <Block label="beszel.systems" value={systems.length} />
+      <Block label="beszel.up" value={`${upTotal} / ${systems.length}`} />
     </Container>
   );
 }

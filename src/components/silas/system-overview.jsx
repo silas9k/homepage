@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { parseVersionForUrl } from "utils/proxy/api-helpers";
+import { useBeszelSystem } from "components/silas/beszel-host-data";
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
 const HOSTS = ["Proxmox", "debian-docker", "raspi"];
@@ -9,44 +9,22 @@ function serviceWidget(service, type) {
   return service?.widgets?.find((widget) => widget.type === type);
 }
 
-function useGlancesHost(service, onFreshData) {
-  const widget = serviceWidget(service, "glances");
-  const version = parseVersionForUrl(widget?.version, 4);
-  const result = useWidgetAPI(widget ?? {}, widget ? `${version}/cpu` : "", { refreshInterval: 60000 });
+function useBeszelHost(service, onFreshData) {
+  const result = useBeszelSystem(service?.silas?.beszelSystemId ?? service?.name);
   useEffect(() => {
-    if (result.data !== undefined && !result.error) onFreshData();
-  }, [onFreshData, result.data, result.error]);
-  const configured = Boolean(widget);
-  const loading = configured && result.data === undefined && !result.error;
-  const online = configured && !result.error && Number.isFinite(result.data?.total);
+    if (result.systems !== undefined && !result.error) onFreshData();
+  }, [onFreshData, result.error, result.systems]);
 
-  return { configured, loading, online };
-}
-
-function useProxmoxHost(service, onFreshData) {
-  const widget = serviceWidget(service, "proxmox");
-  const result = useWidgetAPI(widget ?? {}, widget ? "cluster/resources" : "");
-  useEffect(() => {
-    if (result.data !== undefined && !result.error) onFreshData();
-  }, [onFreshData, result.data, result.error]);
-  const configured = Boolean(widget);
-  const loading = configured && result.data === undefined && !result.error;
-  const nodes = Array.isArray(result.data?.data) ? result.data.data : [];
-  const online =
-    configured &&
-    !result.error &&
-    nodes.some((node) => {
-      if (node.type !== "node" || node.status !== "online") return false;
-      return !widget.node || node.node === widget.node;
-    });
-
-  return { configured, loading, online };
+  return {
+    configured: result.configured,
+    loading: result.loading,
+    online: result.system?.online === true,
+  };
 }
 
 function useHostStatus(service, onFreshData) {
-  const glances = useGlancesHost(service, onFreshData);
-  const proxmox = useProxmoxHost(service, onFreshData);
-  return serviceWidget(service, "proxmox") ? proxmox : glances;
+  const beszel = useBeszelHost(service, onFreshData);
+  return beszel;
 }
 
 function HostOverview({ services, href, onFreshData }) {

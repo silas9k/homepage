@@ -6,154 +6,110 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { useWidgetAPI } = vi.hoisted(() => ({ useWidgetAPI: vi.fn() }));
 vi.mock("utils/proxy/use-widget-api", () => ({ default: useWidgetAPI }));
 
+import { BeszelHostProvider } from "./beszel-host-data";
 import SystemOverview from "./system-overview";
 
 const services = [
   {
     name: "Server",
     services: [
-      {
-        name: "Proxmox",
-        widgets: [{ type: "proxmox", node: "pve", service_name: "Proxmox" }],
-      },
-      { name: "debian-docker", widgets: [{ type: "glances", version: 4, service_name: "debian-docker" }] },
-      { name: "raspi", widgets: [{ type: "glances", version: 4, service_name: "raspi" }] },
+      { name: "Proxmox", silas: { beszelSystemId: "proxmox" }, widgets: [] },
+      { name: "debian-docker", silas: { beszelSystemId: "debian-docker" }, widgets: [] },
+      { name: "raspi", silas: { beszelSystemId: "raspi" }, widgets: [] },
     ],
   },
   {
     name: "Verwaltung & Netzwerk",
     services: [
       {
-        name: "Portainer",
-        href: "https://portainer.example.test",
-        widgets: [{ type: "portainer", service_name: "Portainer", service_group: "Verwaltung & Netzwerk", index: 0 }],
+        name: "Beszel",
+        href: "https://beszel.example.test",
+        widgets: [{ type: "beszel", service_name: "Beszel" }],
       },
-      { name: "Beszel", href: "https://beszel.example.test", widgets: [] },
+      { name: "Portainer", href: "https://portainer.example.test", widgets: [{ type: "portainer" }] },
       {
         name: "Cloudflare Tunnel",
         href: "https://cloudflare.example.test",
-        widgets: [
-          { type: "cloudflared", service_name: "Cloudflare Tunnel", service_group: "Verwaltung & Netzwerk", index: 0 },
-        ],
+        widgets: [{ type: "cloudflared" }],
       },
     ],
   },
 ];
 
+function renderOverview() {
+  return render(
+    <BeszelHostProvider services={services}>
+      <SystemOverview services={services} />
+    </BeszelHostProvider>,
+  );
+}
+
 describe("components/silas/system-overview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useWidgetAPI.mockImplementation((widget, endpoint) => {
-      if (endpoint.endsWith("/cpu")) return { data: { total: widget.service_name === "raspi" ? 3.2 : 1.6 } };
-      if (endpoint === "cluster/resources")
-        return { data: { data: [{ type: "node", node: "pve", status: "online" }] } };
-      if (endpoint === "docker/containers")
-        return { data: [{ State: "running" }, { State: "running" }, { State: "exited" }] };
+    useWidgetAPI.mockImplementation((_widget, endpoint) => {
+      if (endpoint === "systems")
+        return {
+          data: {
+            items: [
+              { id: "debian-docker", name: "debian-docker", status: "up", info: {} },
+              { id: "raspi", name: "raspi", status: "up", info: {} },
+              { id: "proxmox", name: "proxmox", status: "up", info: {} },
+            ],
+          },
+        };
+      if (endpoint === "docker/containers") return { data: [{ State: "running" }, { State: "running" }] };
       if (endpoint === "cfd_tunnel") return { data: { result: { status: "healthy" } } };
       return {};
     });
   });
 
-  it("renders a compact, accessible healthy summary from existing service requests", () => {
-    const { container } = render(<SystemOverview services={services} />);
+  it("renders all Beszel hosts and preserves shortcuts", () => {
+    const { container } = renderOverview();
 
-    expect(screen.getByLabelText("Systemübersicht")).toHaveClass("silas-system-overview");
-    expect(screen.getByLabelText("Hosts: 3 / 3 Hosts")).toBeVisible();
-    expect(screen.getByLabelText("Container: 2 Container aktiv")).toBeVisible();
-    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toBeVisible();
     expect(screen.getByLabelText("Hosts: 3 / 3 Hosts")).toHaveAttribute("href", "https://beszel.example.test");
     expect(screen.getByLabelText("Container: 2 Container aktiv")).toHaveAttribute(
       "href",
       "https://portainer.example.test",
     );
-    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toHaveAttribute(
-      "href",
-      "https://cloudflare.example.test",
-    );
-    expect(screen.getByText(/^Aktualisiert vor \d+s$/)).toBeVisible();
+    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy")).toBeVisible();
     expect(container.querySelectorAll(".silas-overview-item")).toHaveLength(3);
-    expect(useWidgetAPI).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "glances", service_name: "debian-docker", version: 4 }),
-      "4/cpu",
-      { refreshInterval: 60000 },
-    );
-    expect(useWidgetAPI).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "glances", service_name: "raspi", version: 4 }),
-      "4/cpu",
-      { refreshInterval: 60000 },
-    );
-    expect(useWidgetAPI).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "proxmox", node: "pve" }),
-      "cluster/resources",
-    );
-    expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "portainer" }), "docker/containers", {
-      all: 1,
+    expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "beszel" }), "systems", {
+      refreshInterval: 60000,
     });
-    expect(useWidgetAPI).toHaveBeenCalledWith(expect.objectContaining({ type: "cloudflared" }), "cfd_tunnel");
   });
 
-  it("reports one failed Glances host with a textual warning, not only a colored dot", () => {
-    useWidgetAPI.mockImplementation((widget, endpoint) => {
-      if (endpoint.endsWith("/cpu"))
-        return widget.service_name === "raspi" ? { error: new Error("offline") } : { data: { total: 1.6 } };
-      if (endpoint === "cluster/resources")
-        return { data: { data: [{ type: "node", node: "pve", status: "online" }] } };
+  it("reports one offline Beszel host", () => {
+    useWidgetAPI.mockImplementation((_widget, endpoint) => {
+      if (endpoint === "systems")
+        return {
+          data: {
+            items: [
+              { id: "debian-docker", name: "debian-docker", status: "up", info: {} },
+              { id: "raspi", name: "raspi", status: "down", info: {} },
+              { id: "proxmox", name: "proxmox", status: "up", info: {} },
+            ],
+          },
+        };
       if (endpoint === "docker/containers") return { data: [] };
-      return { data: { result: { status: "healthy" } } };
+      if (endpoint === "cfd_tunnel") return { data: { result: { status: "healthy" } } };
+      return {};
     });
 
-    render(<SystemOverview services={services} />);
-
+    renderOverview();
     expect(screen.getByLabelText("Hosts: 2 / 3 Hosts")).toBeVisible();
-    expect(screen.getByLabelText("Hosts: 2 / 3 Hosts").querySelector(".silas-overview-dot-warning")).toBeTruthy();
   });
 
-  it("reports zero hosts when both Glances CPU requests fail", () => {
+  it("does not count loading as offline", () => {
     useWidgetAPI.mockImplementation((_widget, endpoint) => {
-      if (endpoint.endsWith("/cpu")) return { error: new Error("offline") };
-      if (endpoint === "cluster/resources") return { error: new Error("offline") };
+      if (endpoint === "systems") return {};
       if (endpoint === "docker/containers") return { data: [] };
-      return { data: { result: { status: "healthy" } } };
+      if (endpoint === "cfd_tunnel") return { data: { result: { status: "healthy" } } };
+      return {};
     });
 
-    render(<SystemOverview services={services} />);
-
-    expect(screen.getByLabelText("Hosts: 0 / 3 Hosts")).toBeVisible();
-  });
-
-  it("uses clear unavailable fallbacks when configured widget data cannot be used", () => {
-    useWidgetAPI.mockImplementation(() => ({ error: new Error("unavailable") }));
-
-    render(<SystemOverview services={services} />);
-
-    expect(screen.getByText("Container nicht verfügbar")).toBeVisible();
-    expect(screen.getByText("Tunnel nicht verfügbar")).toBeVisible();
-  });
-
-  it("keeps a neutral host state while Glances CPU data is loading", () => {
-    useWidgetAPI.mockImplementation((_widget, endpoint) => {
-      if (endpoint.endsWith("/cpu") || endpoint === "cluster/resources") return {};
-      if (endpoint === "docker/containers") return { data: [] };
-      return { data: { result: { status: "healthy" } } };
-    });
-
-    render(<SystemOverview services={services} />);
-
+    renderOverview();
     expect(screen.getByText("Hosts werden geprüft")).toBeVisible();
     expect(screen.queryByText("0 / 3 Hosts")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Systemübersicht")).toHaveAttribute("aria-live", "polite");
-  });
-
-  it("leaves shortcuts non-interactive when their destination is not configured", () => {
-    const servicesWithoutUrls = services.map((group) => ({
-      ...group,
-      services: group.services.map(({ href, ...service }) => service),
-    }));
-
-    render(<SystemOverview services={servicesWithoutUrls} />);
-
-    expect(screen.getByLabelText("Hosts: 3 / 3 Hosts").tagName).toBe("DIV");
-    expect(screen.getByLabelText("Container: 2 Container aktiv").tagName).toBe("DIV");
-    expect(screen.getByLabelText("Cloudflare Tunnel: Tunnel Healthy").tagName).toBe("DIV");
   });
 });

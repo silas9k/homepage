@@ -1,27 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-async function overviewFixture(page, request, { raspiCpuError = false } = {}) {
+async function overviewFixture(page, request, { raspiError = false } = {}) {
   const groups = await (await request.get("/api/services")).json();
   for (const service of groups.find((group) => group.name === "Server").services) {
-    if (["debian-docker", "raspi"].includes(service.name)) {
-      service.silas.details = {
-        ...service.silas.details,
-        cpuSensorLabel: service.name === "debian-docker" ? "Package id" : "cpu_thermal",
-      };
-      service.widgets = [
-        {
-          type: "glances",
-          version: 4,
-          metric: "summary:/",
-          index: 0,
-          silas: true,
-          service_group: "Server",
-          service_name: service.name,
-        },
-      ];
+    if (["Proxmox", "debian-docker", "raspi"].includes(service.name)) {
+      service.silas.beszelSystemId = service.name === "Proxmox" ? "proxmox" : service.name;
+      service.widgets = [];
     }
   }
   const management = groups.find((group) => group.name === "Verwaltung & Netzwerk");
+  management.services.find((service) => service.name === "Beszel").widgets = [
+    { type: "beszel", service_name: "Beszel", service_group: management.name },
+  ];
   const portainer = management.services.find((service) => service.name === "Portainer");
   const cloudflare = management.services.find((service) => service.name === "Cloudflare Tunnel");
   portainer.widgets = [{ type: "portainer", index: 0, service_group: management.name, service_name: portainer.name }];
@@ -38,21 +28,25 @@ async function overviewFixture(page, request, { raspiCpuError = false } = {}) {
         ? [{ State: "running" }, { State: "running" }, { State: "exited" }]
         : endpoint === "cfd_tunnel"
           ? { result: { status: "healthy" } }
-          : endpoint === "connections"
-            ? { result: [] }
-            : endpoint.endsWith("/cpu")
-              ? service === "raspi" && raspiCpuError
-                ? { error: "offline" }
-                : { total: 1.6 }
-              : endpoint.endsWith("/mem")
-                ? { percent: 29.9 }
-                : endpoint.endsWith("/fs")
-                  ? [{ mnt_point: "/", percent: 22.6 }]
-                  : endpoint.endsWith("/sensors")
-                    ? [{ label: "Package id 0", type: "temperature_core", value: 42.4 }]
-                    : endpoint.endsWith("/uptime")
-                      ? "3 days, 07:12:00"
-                      : { error: "Unexpected browser fixture endpoint" };
+          : endpoint === "systems"
+            ? {
+                items: [
+                  {
+                    id: "debian-docker",
+                    name: "debian-docker",
+                    status: "up",
+                    info: { cpu: 1.6, mp: 29.9, dp: 22.6, u: 286320, dt: 42.4 },
+                  },
+                  {
+                    id: "raspi",
+                    name: "raspi",
+                    status: raspiError ? "down" : "up",
+                    info: { cpu: 1.6, mp: 29.9, dp: 22.6, u: 286320 },
+                  },
+                  { id: "proxmox", name: "proxmox", status: "up", info: {} },
+                ],
+              }
+            : { error: "Unexpected browser fixture endpoint" };
     return route.fulfill({ json: data });
   });
 }
@@ -69,7 +63,7 @@ for (const [width, height] of [
     await page.goto("/", { waitUntil: "networkidle" });
 
     const overview = page.getByLabel("Systemübersicht");
-    await expect(overview).toContainText("2 / 2 Hosts");
+    await expect(overview).toContainText("3 / 3 Hosts");
     await expect(overview).toContainText("2 Container aktiv");
     await expect(overview).toContainText("Tunnel Healthy");
     const overviewStyles = await overview.evaluate((element) => {
@@ -105,8 +99,8 @@ for (const [width, height] of [
   });
 }
 
-test("system overview gives a textual host warning when one Glances CPU request fails", async ({ page, request }) => {
-  await overviewFixture(page, request, { raspiCpuError: true });
+test("system overview gives a textual host warning when one Beszel host is down", async ({ page, request }) => {
+  await overviewFixture(page, request, { raspiError: true });
   await page.goto("/", { waitUntil: "networkidle" });
-  await expect(page.getByLabel("Hosts: 1 / 2 Hosts")).toBeVisible();
+  await expect(page.getByLabel("Hosts: 2 / 3 Hosts")).toBeVisible();
 });

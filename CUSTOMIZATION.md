@@ -28,7 +28,7 @@ git push -u origin feat/silas-homeserver-dashboard
 | `src/utils/config/silas.js`                                        | Opt-in Metadaten `silas`, sichere URL-Prüfung, optionale Karten, Widget-Aktivierung; kein eigener Konfigurationsserver |
 | `src/utils/config/service-helpers.js`                              | Kleiner Aufruf des Adapters; Silas-Platzhalter nach YAML-Parsing ersetzen; native Credential-Allowlist bleibt erhalten |
 | `src/utils/proxy/use-widget-api.js`                                | Mindestintervall 60 s und begrenzte Wiederholungen für Silas-Widgets                                                   |
-| `src/widgets/glances/metrics/summary.jsx`, `component.jsx`         | CPU/RAM/Mount-Belegung über vorhandenen Glances-Proxy, keine neue Proxyroute                                           |
+| `src/components/silas/beszel-host-data.jsx`                       | Gemeinsame Beszel-Systemsabfrage und normalisierte Hostmetriken                                                      |
 | `src/utils/proxy/http.js`                                          | TLS-Verifikation aktiv; absichtliche Sicherheitsabweichung vom Upstream                                                |
 | `src/utils/logger.js`, `src/utils/silas-redact.js`                 | Bekannte Secrets in Logs maskieren                                                                                     |
 | `src/pages/_app.jsx`                                               | Browser-Zoom wieder zulassen                                                                                           |

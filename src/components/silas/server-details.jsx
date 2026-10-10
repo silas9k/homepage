@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { FiCopy, FiExternalLink, FiServer, FiTerminal, FiX } from "react-icons/fi";
 
 import ResolvedIcon from "components/resolvedicon";
-import { parseVersionForUrl } from "utils/proxy/api-helpers";
+import { useBeszelSystem } from "components/silas/beszel-host-data";
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
 function percent(value) {
@@ -14,23 +14,6 @@ function percent(value) {
 
 function proxmoxPercent(used, total) {
   return Number.isFinite(used) && Number.isFinite(total) && total > 0 ? percent((used / total) * 100) : "—";
-}
-
-const defaultCpuSensorLabels = ["cpu_thermal", "Core", "Tctl", "Temperature"];
-
-export function getTemperature(sensors, preferredLabel) {
-  if (!Array.isArray(sensors)) return undefined;
-
-  const labels = [preferredLabel, ...defaultCpuSensorLabels].filter(Boolean);
-  for (const label of labels) {
-    const values = sensors
-      .filter((sensor) => sensor.type === "temperature_core" && sensor.label?.startsWith(label))
-      .map((sensor) => sensor.value)
-      .filter(Number.isFinite);
-    if (values.length > 0) return values.reduce((sum, value) => sum + value, 0) / values.length;
-  }
-
-  return undefined;
 }
 
 export function formatTemperature(value) {
@@ -64,24 +47,16 @@ export default function ServerDetails({ service, onClose }) {
   const titleId = useId();
   const dialogRef = useRef(null);
   const copyTimer = useRef(null);
-  const configuredWidget = service.widgets?.find((item) => item.type === "glances");
+  const beszelWidget = service.widgets?.find((item) => item.type === "beszel");
+  const beszel = useBeszelSystem(service.silas?.beszelSystemId ?? service.name, beszelWidget);
   const proxmoxWidget = service.widgets?.find((item) => item.type === "proxmox");
   const isProxmox = Boolean(proxmoxWidget);
-  const widget = configuredWidget ?? { type: "glances", url: "" };
-  const version = parseVersionForUrl(widget.version, 4);
-  // Match the summary card's query/cache key so both display the same CPU sample.
-  const cpu = useWidgetAPI(widget, configuredWidget ? `${version}/cpu` : "", { refreshInterval: 60000 });
-  const memory = useWidgetAPI(widget, configuredWidget ? `${version}/mem` : "");
-  const disk = useWidgetAPI(widget, configuredWidget ? `${version}/fs` : "");
-  const sensors = useWidgetAPI(widget, configuredWidget ? `${version}/sensors` : "", { refreshInterval: 60000 });
-  const uptime = useWidgetAPI(widget, configuredWidget ? `${version}/uptime` : "", { refreshInterval: 60000 });
   const proxmoxCluster = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "cluster/resources" : "");
   const proxmoxNode = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "node/status" : "");
   const proxmoxStorage = useWidgetAPI(proxmoxWidget ?? {}, isProxmox ? "node/storage" : "");
-  const filesystem = Array.isArray(disk.data) ? disk.data.find((item) => item.mnt_point === "/") : undefined;
   const details = service.silas.details;
-  const temperature = formatTemperature(getTemperature(sensors.data, details.cpuSensorLabel));
-  const formattedUptime = formatUptime(uptime.data);
+  const temperature = formatTemperature(beszel.system?.temperature);
+  const formattedUptime = formatUptime(beszel.system?.uptime);
   const proxmoxItems = Array.isArray(proxmoxCluster.data?.data) ? proxmoxCluster.data.data : [];
   const proxmoxNodes = proxmoxItems.filter(
     (item) => item.type === "node" && (proxmoxWidget.node === undefined || item.node === proxmoxWidget.node),
@@ -194,9 +169,9 @@ export default function ServerDetails({ service, onClose }) {
                 ["Storage", proxmoxPercent(proxmoxStorageUsed, proxmoxStorageTotal)],
               ]
             : [
-                ["CPU", percent(cpu.data?.total)],
-                ["RAM", percent(memory.data?.percent)],
-                ["Disk", percent(filesystem?.percent)],
+                ["CPU", percent(beszel.system?.cpuPercent)],
+                ["RAM", percent(beszel.system?.memoryPercent)],
+                ["Disk", percent(beszel.system?.diskPercent)],
               ]
           ).map(([label, value]) => (
             <div

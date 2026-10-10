@@ -19,7 +19,7 @@ const service = {
       links: [{ label: "Portainer", href: "https://portainer.example.test" }],
     },
   },
-  widgets: [{ type: "glances", version: 4, metric: "summary:/" }],
+  widgets: [{ type: "beszel" }],
 };
 
 const proxmoxService = {
@@ -39,6 +39,19 @@ describe("components/silas/server-details", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     useWidgetAPI.mockImplementation((_widget, path) => {
+      if (path === "systems")
+        return {
+          data: {
+            items: [
+              {
+                id: "debian-docker",
+                name: "debian-docker",
+                status: "up",
+                info: { cpu: 12.5, mp: 44.2, dp: 31.1, u: 270720, dt: 42.4 },
+              },
+            ],
+          },
+        };
       if (path.endsWith("/cpu")) return { data: { total: 12.5 } };
       if (path.endsWith("/mem")) return { data: { percent: 44.2 } };
       return {

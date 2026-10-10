@@ -63,6 +63,6 @@ Für spätere Updates dieselben Compose-Dateien verwenden. `NODE_EXTRA_CA_CERTS`
 
 ## Docker und Monitoring
 
-Homepage bekommt überhaupt keinen Docker-Socket. Containerzahlen kommen optional über Portainer. Auch ein read-only gemounteter Docker-Socket verhindert keine Schreib-API-Aufrufe und wäre daher kein ausreichender Schutz. Glances auf Debian und Pi nur intern/Tailscale mit Firewall beziehungsweise Authentifizierung zugänglich machen; das Dashboard sollte nicht dessen Prozesse oder Container steuern können.
+Homepage bekommt überhaupt keinen Docker-Socket. Containerzahlen kommen optional über Portainer. Auch ein read-only gemounteter Docker-Socket verhindert keine Schreib-API-Aufrufe und wäre daher kein ausreichender Schutz. Beszel nur intern/Tailscale mit Firewall beziehungsweise Authentifizierung zugänglich machen; das Dashboard sollte nicht dessen Prozesse oder Container steuern können.
 
 Runtime: unprivilegierter Node-Benutzer, alle Capabilities entfernt, `no-new-privileges`, begrenzte PIDs/Logs/RAM. Die Konfiguration ist read-only eingebunden. Das Image-Dateisystem bleibt für Next.js-ISR-Cache beschreibbar. Das Dashboard benötigt keinen Zugriff auf Backup-Repositories oder deren Passwörter.

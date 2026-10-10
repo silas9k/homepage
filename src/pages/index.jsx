@@ -14,6 +14,7 @@ import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
 import ServicesGroup from "components/services/group";
 import AttentionCenter from "components/silas/attention-center";
+import { BeszelHostProvider } from "components/silas/beszel-host-data";
 import SilasHeader from "components/silas/header";
 import ServiceSearch from "components/silas/service-search";
 import SystemOverview from "components/silas/system-overview";
@@ -460,96 +461,98 @@ function Home({ initialSettings }) {
 
       <Script src="/api/config/custom.js" />
 
-      <div
-        className={classNames(
-          settings.fullWidth ? "" : "container",
-          "relative m-auto flex flex-col justify-start z-10 h-full min-h-screen",
-        )}
-      >
-        {settings.silasTheme ? (
-          <ServiceSearch
-            services={services}
-            searchString={searchString}
-            setSearchString={setSearchString}
-            isOpen={searching}
-            setSearching={setSearching}
-          />
-        ) : (
-          <QuickLaunch
-            servicesAndBookmarks={servicesAndBookmarks}
-            searchString={searchString}
-            setSearchString={setSearchString}
-            isOpen={searching}
-            setSearching={setSearching}
-          />
-        )}
-        {settings.silasTheme ? (
-          <>
-            <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
-            <SystemOverview services={services} />
-            <AttentionCenter services={services} />
-          </>
-        ) : (
-          <div
-            id="information-widgets"
-            className={classNames(
-              "flex flex-row flex-wrap justify-between z-20",
-              headerStyles[headerStyle],
-              settings.cardBlur !== undefined &&
-                headerStyle === "boxed" &&
-                `backdrop-blur${settings.cardBlur.length ? "-" : ""}${settings.cardBlur}`,
-            )}
-          >
-            <div id="widgets-wrap" className={classNames("flex flex-row w-full flex-wrap justify-between gap-x-2")}>
-              {widgets && (
-                <>
-                  {widgets
-                    .filter((widget) => !rightAlignedWidgets.includes(widget.type))
-                    .map((widget, i) => (
-                      <Widget
-                        key={i}
-                        widget={widget}
-                        style={{ header: headerStyle, isRightAligned: false, cardBlur: settings.cardBlur }}
-                      />
-                    ))}
-
-                  <div
-                    id="information-widgets-right"
-                    className={classNames(
-                      "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end",
-                      "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end gap-x-2",
-                    )}
-                  >
+      <BeszelHostProvider services={services}>
+        <div
+          className={classNames(
+            settings.fullWidth ? "" : "container",
+            "relative m-auto flex flex-col justify-start z-10 h-full min-h-screen",
+          )}
+        >
+          {settings.silasTheme ? (
+            <ServiceSearch
+              services={services}
+              searchString={searchString}
+              setSearchString={setSearchString}
+              isOpen={searching}
+              setSearching={setSearching}
+            />
+          ) : (
+            <QuickLaunch
+              servicesAndBookmarks={servicesAndBookmarks}
+              searchString={searchString}
+              setSearchString={setSearchString}
+              isOpen={searching}
+              setSearching={setSearching}
+            />
+          )}
+          {settings.silasTheme ? (
+            <>
+              <SilasHeader brand={settings.title || "silasnet."} onSearch={() => setSearching(true)} />
+              <SystemOverview services={services} />
+              <AttentionCenter services={services} />
+            </>
+          ) : (
+            <div
+              id="information-widgets"
+              className={classNames(
+                "flex flex-row flex-wrap justify-between z-20",
+                headerStyles[headerStyle],
+                settings.cardBlur !== undefined &&
+                  headerStyle === "boxed" &&
+                  `backdrop-blur${settings.cardBlur.length ? "-" : ""}${settings.cardBlur}`,
+              )}
+            >
+              <div id="widgets-wrap" className={classNames("flex flex-row w-full flex-wrap justify-between gap-x-2")}>
+                {widgets && (
+                  <>
                     {widgets
-                      .filter((widget) => rightAlignedWidgets.includes(widget.type))
+                      .filter((widget) => !rightAlignedWidgets.includes(widget.type))
                       .map((widget, i) => (
                         <Widget
                           key={i}
                           widget={widget}
-                          style={{ header: headerStyle, isRightAligned: true, cardBlur: settings.cardBlur }}
+                          style={{ header: headerStyle, isRightAligned: false, cardBlur: settings.cardBlur }}
                         />
                       ))}
-                  </div>
-                </>
-              )}
+
+                    <div
+                      id="information-widgets-right"
+                      className={classNames(
+                        "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end",
+                        "m-auto flex flex-wrap grow sm:basis-auto justify-between md:justify-end gap-x-2",
+                      )}
+                    >
+                      {widgets
+                        .filter((widget) => rightAlignedWidgets.includes(widget.type))
+                        .map((widget, i) => (
+                          <Widget
+                            key={i}
+                            widget={widget}
+                            style={{ header: headerStyle, isRightAligned: true, cardBlur: settings.cardBlur }}
+                          />
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {servicesAndBookmarksGroups}
+
+          <div id="footer" className="flex flex-col mt-auto p-8 w-full">
+            <div id="style" className="flex w-full justify-end">
+              {!settings?.color && <ColorToggle />}
+              <Revalidate />
+              <SignOut />
+              {!settings.theme && <ThemeToggle />}
+            </div>
+
+            <div id="version" className="flex mt-4 w-full justify-end">
+              {!settings.hideVersion && <Version disableUpdateCheck={settings.disableUpdateCheck} />}
             </div>
           </div>
-        )}
-        {servicesAndBookmarksGroups}
-
-        <div id="footer" className="flex flex-col mt-auto p-8 w-full">
-          <div id="style" className="flex w-full justify-end">
-            {!settings?.color && <ColorToggle />}
-            <Revalidate />
-            <SignOut />
-            {!settings.theme && <ThemeToggle />}
-          </div>
-
-          <div id="version" className="flex mt-4 w-full justify-end">
-            {!settings.hideVersion && <Version disableUpdateCheck={settings.disableUpdateCheck} />}
-          </div>
         </div>
-      </div>
+      </BeszelHostProvider>
     </>
   );
 }

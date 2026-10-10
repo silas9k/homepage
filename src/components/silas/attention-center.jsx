@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 
-import { parseVersionForUrl } from "utils/proxy/api-helpers";
+import { useBeszelSystem } from "components/silas/beszel-host-data";
 import useWidgetAPI from "utils/proxy/use-widget-api";
 
 const INTENTIONAL_STATES = new Set(["planned", "stopped", "later", "not configured", "not-configured"]);
@@ -52,23 +52,15 @@ function useReportedIssue(onStatus, id, issue) {
   }, [id, issueKey, onStatus]);
 }
 
-function glancesPercent(data) {
-  if (!Array.isArray(data)) return undefined;
-  const filesystem = data.find((item) => item.mnt_point === "/") ?? data[0];
-  return Number(filesystem?.percent);
-}
-
-function GlancesSource({ service, onStatus }) {
-  const widget = service?.widgets?.find((item) => item.type === "glances");
-  const version = parseVersionForUrl(widget?.version, 4);
-  const cpu = useWidgetAPI(widget ?? {}, widget ? `${version}/cpu` : "", { refreshInterval: 60000 });
-  const filesystem = useWidgetAPI(widget ?? {}, widget ? `${version}/fs` : "", { refreshInterval: 60000 });
-  const settled = Boolean(cpu.error || cpu.data || filesystem.error || filesystem.data);
-  const online = Number.isFinite(Number(cpu.data?.total));
+function BeszelSource({ service, onStatus }) {
+  const result = useBeszelSystem(service?.silas?.beszelSystemId ?? service?.name);
+  const settled = Boolean(result.error || result.systems);
   const host = service?.silas?.host ?? service?.name;
   const hostIssue =
-    widget && settled && !online ? { kind: "host", host, title: service.name, message: "Host nicht erreichbar" } : null;
-  const diskPercent = glancesPercent(filesystem.data);
+    result.configured && settled && !result.system?.online
+      ? { kind: "host", host, title: service.name, message: "Host nicht erreichbar" }
+      : null;
+  const diskPercent = result.system?.diskPercent;
   const diskSeverity = getDiskSeverity(diskPercent);
   const diskIssue = diskSeverity
     ? {
@@ -87,13 +79,11 @@ function GlancesSource({ service, onStatus }) {
 
 function ProxmoxSource({ service, onStatus }) {
   const widget = service?.widgets?.find((item) => item.type === "proxmox");
-  const cluster = useWidgetAPI(widget ?? {}, widget ? "cluster/resources" : "");
   const storage = useWidgetAPI(widget ?? {}, widget ? "node/storage" : "");
-  const settled = Boolean(cluster.error || cluster.data || storage.error || storage.data);
-  const available = Array.isArray(cluster.data?.data);
   const host = service?.silas?.host ?? service?.name;
+  const beszel = useBeszelSystem(service?.silas?.beszelSystemId ?? service?.name);
   const hostIssue =
-    widget && settled && !available
+    beszel.configured && (beszel.error || beszel.systems) && !beszel.system?.online
       ? { kind: "host", host, title: service.name, message: "Host nicht erreichbar" }
       : null;
   const storages = Array.isArray(storage.data?.data) ? storage.data.data : [];
@@ -186,7 +176,7 @@ export default function AttentionCenter({ services }) {
   return (
     <>
       {hostServices.map((service) => (
-        <GlancesSource key={service.name} service={service} onStatus={updateStatus} />
+        <BeszelSource key={service.name} service={service} onStatus={updateStatus} />
       ))}
       {proxmox && <ProxmoxSource service={proxmox} onStatus={updateStatus} />}
       {cloudflare && <CloudflareSource service={cloudflare} onStatus={updateStatus} />}
