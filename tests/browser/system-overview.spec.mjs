@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.mjs";
 
 async function overviewFixture(page, request, { raspiError = false } = {}) {
   const groups = await (await request.get("/api/services")).json();

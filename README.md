@@ -1,5 +1,10 @@
 # silasnet.
 
+Authentication is mandatory. Before starting, follow [local account setup and HTTPS access](docs/silas/AUTHENTICATION.md). Plain production HTTP browser access cannot use Secure session cookies; use Tailscale HTTPS or a local HTTPS proxy. The dashboard and every sensitive API require a persistent server session.
+
+For the existing Debian server, use the [production runbook and rollback plan](docs/silas/PRODUCTION_RUNBOOK.md) and read the [final security release gate](docs/silas/PRODUCTION_SECURITY_AUDIT.md). The public hostname must stay behind both Cloudflare Access and Homepage authentication.
+
+
 Ein privates Homeserver-Dashboard auf Basis von [gethomepage/homepage](https://github.com/gethomepage/homepage), für die Debian-13-Docker-VM auf dem ThinkCentre M920q. Alle Dienste bleiben echte Homepage-Integrationen. Ohne konfigurierte APIs erscheinen ausschließlich neutrale Leerzustände.
 
 ## Auf Debian starten
@@ -13,7 +18,7 @@ cp .env.example .env
 chmod 600 .env
 nano .env
 docker compose config --quiet
-docker compose up -d --build
+docker compose up -d --no-deps --build homepage
 docker compose ps
 curl --fail http://127.0.0.1:3000/api/healthcheck
 ```
@@ -26,20 +31,20 @@ Standardmäßig ist der Port ausschließlich an `127.0.0.1` der Debian-VM gebund
 ssh -N -L 3000:127.0.0.1:3000 YOUR_SSH_USER@debian-docker
 ```
 
-Dann im Browser `http://localhost:3000` öffnen. SSH-Benutzer und Host anpassen. Für einen direkten Zugriff im eigenen LAN/Tailnet `HOMEPAGE_BIND` auf die feste VM- oder Tailscale-Adresse setzen und den verwendeten Namen inklusive Port in `HOMEPAGE_ALLOWED_HOSTS` ergänzen. Keine Platzhalter-IP steht im Quellcode. Details: [Zugriff und Sicherheit](docs/silas/SECURITY.md).
+Die SSH-Weiterleitung eignet sich für lokale Health-/API-Prüfungen. Für den Browser-Login in Produktion den bestehenden HTTPS-Endpunkt `https://debian-docker.tail277de6.ts.net` über Tailscale Serve verwenden; Secure-Cookies funktionieren nicht mit einem normalen HTTP-Login. Compose veröffentlicht ausschließlich `127.0.0.1:3000`. Die Bind-Adresse nicht auf LAN/Tailscale ändern. Details: [Produktionsanleitung](docs/silas/PRODUCTION_RUNBOOK.md).
 
 ## Welche Werte muss ich setzen?
 
-Für den Start über SSH sind **keine API-Zugangsdaten erforderlich**. Für den gewünschten direkten Zugriff müssen nur Bind-Adresse und erlaubter Host stimmen:
+Dienst-API-Zugangsdaten sind optional. Für den privaten Browserzugriff müssen ein lokales Konto und die exakten HTTPS-Hosts/Origins eingerichtet sein:
 
 | Wert                     | Bedeutung                                                                   |
 | ------------------------ | --------------------------------------------------------------------------- |
-| `HOMEPAGE_BIND`          | Standard `127.0.0.1`; für direkten privaten Zugriff die passende VM-Adresse |
-| `HOMEPAGE_PORT`          | Standard `3000`                                                             |
 | `HOMEPAGE_ALLOWED_HOSTS` | Exakte Browser-Hosts, gegebenenfalls mit Port; niemals `*`                  |
+| `HOMEPAGE_AUTH_ORIGINS` | Exakte HTTPS-Origins, durch Kommas getrennt; siehe `.env.example` |
+| `HOMEPAGE_AUTH_BOOTSTRAP_USERNAME` / `HOMEPAGE_AUTH_BOOTSTRAP_PASSWORD` | Nur beim ersten Konto; danach aus `.env` entfernen und nur Homepage neu erstellen |
 | `HOMEPAGE_VAR_*`         | Optionale Dienst-URLs und APIs; leer lassen, solange unbekannt              |
 
-Ein Widget wird erst aktiv, wenn sämtliche in `silasRequired` genannten Felder gesetzt sind. Ein leerer Link wird entfernt, eine leere Health-URL wird nicht abgefragt. Paperless-ngx, Minecraft Server 2 und Playit.gg bleiben verborgen, bis ihre URL gesetzt wird. Resticwatch und das zukünftige Pi-Backupziel sind als optionale/geplante Karten sichtbar. Nach `.env`-Änderungen `docker compose up -d --force-recreate` ausführen, dann im Dashboard unten rechts neu laden. Passwörter mit Sonderzeichen in `.env` in einfache Anführungszeichen setzen. Für Dateisecrets siehe Sicherheitsdokumentation.
+Ein Widget wird erst aktiv, wenn sämtliche in `silasRequired` genannten Felder gesetzt sind. Ein leerer Link wird entfernt, eine leere Health-URL wird nicht abgefragt. Paperless-ngx, Minecraft Server 2 und Playit.gg bleiben verborgen, bis ihre URL gesetzt wird. Resticwatch und das zukünftige Pi-Backupziel sind als optionale/geplante Karten sichtbar. Nach `.env`-Änderungen `docker compose up -d --no-deps --force-recreate homepage` ausführen, dann im Dashboard unten rechts neu laden. Passwörter mit Sonderzeichen in `.env` in einfache Anführungszeichen setzen. Für Dateisecrets siehe Sicherheitsdokumentation.
 
 ## Dienste und reale Metriken
 

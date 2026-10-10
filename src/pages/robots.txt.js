@@ -1,6 +1,10 @@
+import { requirePageSession } from "utils/auth/http";
 import { getSettings } from "utils/config/config";
 
-export async function getServerSideProps({ res }) {
+export async function getServerSideProps(context) {
+  const denied = requirePageSession(context);
+  if (denied) return denied;
+  const { res } = context;
   const settings = getSettings();
   const content = ["User-agent: *", !!settings.disableIndexing ? "Disallow: /" : "Allow: /"].join("\n");
 

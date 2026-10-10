@@ -1,0 +1,55 @@
+# Private dashboard authentication
+
+Authentication is mandatory, including local development. There is no registration, guest access, bearer-token bypass, OIDC login, or auth-disable switch. All accounts are equally trusted dashboard owners: there is no per-user service inventory or read-only role.
+
+## First account
+
+Use Node 22.16 or newer (the container uses Node 22). Install with `pnpm install --frozen-lockfile`.
+
+Copy `.env.example` to `.env`, which is ignored by Git. Set `HOMEPAGE_AUTH_BOOTSTRAP_USERNAME` and a unique randomly generated `HOMEPAGE_AUTH_BOOTSTRAP_PASSWORD` of at least 14 characters. These values are read only when the SQLite accounts table is empty. The account is created on the first login attempt. Existing accounts are never overwritten, even if bootstrap variables change. With no account and no bootstrap values, login remains unavailable to everyone.
+
+After the first successful login, remove both bootstrap values from `.env` and restart the process. Do not put passwords in commands, URLs, screenshots, tickets or source files. Docker Compose loads `.env`; Next development loads `.env` itself. No session signing secret is needed: sessions are opaque random identifiers checked against SQLite on every request.
+
+## Hosts, origins and future tunnel
+
+`HOMEPAGE_ALLOWED_HOSTS` is a comma-separated list of exact browser Host headers, including ports where applicable. Wildcards fail closed. Production uses `home.silasnet.win,debian-docker.tail277de6.ts.net,localhost:3000,127.0.0.1:3000`. Loopback names on `PORT` are also allowed for health checks and local development.
+
+`HOMEPAGE_AUTH_ORIGINS` is a comma-separated list of exact HTTPS browser origins. Production uses `https://home.silasnet.win,https://debian-docker.tail277de6.ts.net`. No trailing slash, path, wildcard or `null` origin is accepted. Origins must also match the request Host. Production login requires HTTPS even when cloudflared's connection to Homepage uses HTTP. Use Tailscale HTTPS or a local HTTPS reverse proxy for private production browser access. Loopback HTTP is supported only by `pnpm dev`; production cookies are always Secure and cannot be used by a plain HTTP browser.
+
+The app ignores `X-Forwarded-Host`, `X-Forwarded-Proto`, `X-Forwarded-For` and `CF-Connecting-IP` for authentication, origin validation, redirects and throttling. The future proxy must preserve the exact external Host and browser Origin. Do not change Host to localhost. No proxy trust list is needed because forwarded headers confer no authority. Spoofing these headers cannot select an allowed origin, weaken cookies or evade throttling.
+
+Compose fixes the host publish address to `127.0.0.1:3000` and pins `NODE_ENV=production`, `PORT=3000`. Its Node listener uses `0.0.0.0` **inside the isolated container**, which is necessary for Docker port forwarding; the host-side published port remains loopback. Run cloudflared in the host network namespace later. A cloudflared container on a different bridge cannot reach the host's loopback using its own `127.0.0.1`. Do not widen the Homepage host binding to work around this. See [PRODUCTION_RUNBOOK.md](PRODUCTION_RUNBOOK.md) for the ingress preflight. No deployment or Cloudflare changes were performed.
+
+## Persistence and local administration
+
+`HOMEPAGE_AUTH_DB` defaults to `data/auth/auth.sqlite` locally. Compose sets `/app/data/auth/auth.sqlite` in the `homepage-auth` named volume (normally `silas-homepage_homepage-auth`). SQLite uses WAL, a short busy timeout, foreign keys, and small indexed tables for accounts, sessions and throttles. The image creates its storage directory owned by the non-root `node` user. Local Unix permissions are 0700 for the directory and 0600 for the database. On Windows restrict the directory using Windows ACLs. Password hashes and session records are sensitive. Auth databases are excluded from Git and Docker build contexts.
+
+Use `node scripts/auth-backup.cjs backup /PRIVATE/PATH/auth-backup.sqlite` with `HOMEPAGE_AUTH_DB` set to the live database. This uses SQLite's online backup API and verifies integrity; it refuses to overwrite an existing backup. Never blindly copy a live main SQLite file or its WAL/SHM files. Restore only with Homepage stopped and a current backup saved: `node scripts/auth-backup.cjs restore /PRIVATE/PATH/auth-backup.sqlite --homepage-stopped`. Restore validates the source before writing, retains accounts, and invalidates all restored sessions and throttle windows. The flag is an operator assertion, not a process detector. Full Docker commands and a stopped-application fallback are in the production runbook.
+
+Reset a password locally with `node scripts/auth-admin.cjs reset-password USERNAME`. It prompts for a hidden password in an interactive terminal, validates the password length, and revokes every session for that account. Set `HOMEPAGE_AUTH_DB` in the shell to the same database path as the running application. This standalone CLI does not automatically load `.env`. In Docker use `docker compose exec homepage node scripts/auth-admin.cjs reset-password USERNAME` after rebuilding the image.
+
+`node scripts/auth-admin.cjs disable USERNAME` disables an account and revokes its sessions. `enable USERNAME` re-enables it. There is intentionally no web account management endpoint. Initially only one bootstrap account is supported; creating additional accounts requires a future local administrative extension. Do not delete the persistent volume to reset a password: that would erase accounts and reactivate first-run bootstrap.
+
+## Passwords, sessions, CSRF and throttling
+
+Passwords use the maintained `@node-rs/argon2` implementation: Argon2id, 19 MiB, two iterations, parallelism one, 32-byte output and library-generated salts. This meets the [OWASP Argon2id baseline](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). Unknown and disabled accounts also perform hash verification and return the same generic error.
+
+Session IDs are 32 cryptographically random bytes. Only their SHA-256 digests are persisted. Sessions expire after 12 hours without sliding renewal. Successful login revokes the supplied previous session and issues a fresh ID and CSRF token. Logout deletes the server record and expires the cookie. Disabled accounts and expired, revoked or malformed tokens fail on every check. Password resets invalidate existing sessions. Production cookies use `__Host-silas-session`, HttpOnly, Secure, SameSite=Lax, Path=/, no Domain, and a matching expiration. Development uses `silas-session` without Secure for loopback HTTP.
+
+Authenticated POST/PUT/PATCH/DELETE (and other unsafe methods) require both an exact allowed same Origin and a session-bound CSRF token in `x-silas-csrf`. The token is obtained from authenticated GET `/api/auth/session`. Login accepts only same-origin JSON POST; cross-site requests and missing Origin are rejected. Logout and refresh use POST. No GET endpoint is intended to change dashboard configuration. Authenticated users remain fully trusted for the optional MCP configuration tools, which also require a session and CSRF token; legacy MCP bearer tokens no longer bypass authentication.
+
+Login attempts reserve budgets atomically in SQLite before hashing: five attempts per normalized username per 15 minutes and 20 total per minute. Successful login clears the username failure budget; the short global budget still limits hashing CPU/memory. Windows expire automatically, including after restarts. There is no permanent account lockout and no dependency on attacker-supplied IP headers. The tradeoff is that an attacker can temporarily exhaust a shared budget; later Cloudflare rate limiting can provide additional availability protection.
+
+## Authorization and browser headers
+
+The Next.js Node Proxy applies host validation, auth checks and no-store to every request. Only the exact login page, login POST, minimal `/api/healthcheck`, `/silas/favicon.svg` and build-manifest dependencies needed by the login page (plus their fonts and framework error dependencies) are public in production. Dashboard bundles contain host labels and require authentication; arbitrary `/_next/static/` paths and source maps are not exempt. The build manifest must be present in the standalone image; missing manifests fail closed. Development allows framework static files for hot reload. Private service icons, custom CSS/JS, manifests, images, all metrics/proxies, MCP, config and server detail data require a session.
+
+Every sensitive API handler independently calls `withAuth`, and every page which reads config independently calls `requirePageSession`. The dashboard uses server rendering rather than generating a public static configuration snapshot. `/_next/data/` requests also require a session. There are no `/api/silas/*` routes at present: Silas components consume the protected service inventory and widget proxy endpoints. New API handlers must use the same guard; the route coverage test checks this rule.
+
+Responses are private/no-store so a future CDN cannot share authenticated HTML/JSON. Keep Cloudflare caching disabled for this application and ensure logout/login bypass all shared caches. CSP uses a fresh random per-response script nonce, same-origin scripts/connections/fonts, same-origin/data/blob images and the exact `https://cdn.jsdelivr.net` icon CDN. It does not allow arbitrary HTTPS image origins. Inline styles are required by Homepage; production disallows script eval. Frames/objects are blocked, base-uri is none and form-action is self. Headers also include nosniff, no-referrer, restrictive Permissions-Policy and X-Frame-Options DENY. HSTS belongs at the future HTTPS edge with a hostname-specific rule, no includeSubDomains/preload. TLS validation is never weakened globally. See [PRODUCTION_SECURITY_AUDIT.md](PRODUCTION_SECURITY_AUDIT.md) for the final release gate.
+
+## Validation and limitations
+
+`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, then `pnpm test:e2e:auth`. The auth E2E launcher creates an ephemeral account/password/database and test-only TLS certificate under ignored artifacts, starts the built production server on loopback behind a local HTTPS test proxy, and tears down its child process. The proxy is a validation fixture, not a Cloudflare deployment. Browser tests verify login, secure cookies, logout, all anonymous API routes, data routes, host validation, CSP and spoofed forwarded headers. Existing dashboard E2E tests run authenticated.
+
+This is a single-instance private application. Persistent throttles work across workers on the same SQLite file, but do not share state across multiple machines. No MFA or email recovery is provided. Local filesystem and Docker administrators can access the auth store. All authenticated accounts are owners, so this is unsuitable for public registration or untrusted collaborators. Keep Node/Next/native dependencies patched, and later add Cloudflare Access/MFA if desired as an additional layer.

@@ -1,25 +1,29 @@
-import { signOut, useSession } from "next-auth/react";
-import { useTranslation } from "next-i18next/pages";
-import { MdLogout } from "react-icons/md";
+import { useState } from "react";
+
+import { authenticatedFetch } from "utils/auth/client";
 
 export default function SignOut() {
-  const { t } = useTranslation();
-  const { status } = useSession();
-
-  if (status !== "authenticated") {
-    return null;
-  }
-
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
   return (
-    <div id="signout" className="rounded-full flex align-middle self-center mr-3">
-      <button
-        type="button"
-        onClick={() => signOut({ callbackUrl: "/auth/signin?autologin=0" })}
-        className="outline-hidden"
-      >
-        <MdLogout className="text-theme-800 dark:text-theme-200 w-6 h-6 cursor-pointer" aria-hidden="true" />
-        <span className="sr-only">{t("auth.signout")}</span>
-      </button>
-    </div>
+    <button
+      type="button"
+      className="silas-logout"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        setError(false);
+        try {
+          const response = await authenticatedFetch("/api/auth/logout", { method: "POST" });
+          if (!response.ok) throw new Error("Logout failed");
+          window.location.replace(new URL("/auth/signin", window.location.origin).href);
+        } catch {
+          setError(true);
+          setBusy(false);
+        }
+      }}
+    >
+      {error ? "Retry sign out" : "Sign out"}
+    </button>
   );
 }

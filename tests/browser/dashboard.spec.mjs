@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.mjs";
 
 for (const [width, height] of [
   [1920, 1080],
@@ -16,7 +16,7 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     await page.goto("/", { waitUntil: "networkidle" });
     await expect(page.locator(".silas-wordmark")).toHaveText("silasnet.");
-    await expect(page.locator(".service-card")).toHaveCount(19);
+    await expect(page.locator(".service-card")).toHaveCount(20);
     await expect(page.getByRole("heading", { name: "Server", exact: true })).toBeVisible();
     await expect(page.locator('.service[data-name="Paperless-ngx"]')).toHaveCount(0);
     await expect(page.locator('.service[data-name="Resticwatch"]')).toHaveCount(1);
@@ -60,7 +60,7 @@ for (const [width, height] of [
     await expect(page.getByRole("textbox", { name: "Dienste suchen" })).toBeFocused();
     await page.getByRole("textbox", { name: "Dienste suchen" }).fill("Tailscale");
     await expect(
-      page.getByRole("dialog", { name: "Dienste suchen" }).getByRole("button", { name: /Tailscale/ }),
+      page.getByRole("dialog", { name: "Dienste suchen" }).getByRole("option", { name: /Tailscale/ }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("textbox", { name: "Dienste suchen" })).not.toBeVisible();
@@ -84,15 +84,15 @@ test("health, config privacy and host validation", async ({ request }) => {
 test("configured service cards launch their configured destination from the complete card", async ({
   page,
   request,
+  baseURL,
 }) => {
   const groups = await (await request.get("/api/services")).json();
   const destinations = Object.fromEntries(
     [
-      "Proxmox",
       "Nextcloud",
       "Memos",
       "Vaultwarden",
-      "Palmr",
+      "SilasSend",
       "Immich",
       "Jellyfin",
       "Home Assistant",
@@ -103,7 +103,7 @@ test("configured service cards launch their configured destination from the comp
       "Tailscale",
       "Cloudflare Tunnel",
       "Resticwatch",
-    ].map((name) => [name, `http://127.0.0.1:3100/launcher/${encodeURIComponent(name)}`]),
+    ].map((name) => [name, `${baseURL}/launcher/${encodeURIComponent(name)}`]),
   );
   for (const group of groups) {
     for (const service of group.services) {

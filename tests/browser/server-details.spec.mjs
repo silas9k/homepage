@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures.mjs";
 
 // Synthetic UI fixtures only: no backend credentials or live service calls.
 for (const [width, height] of [

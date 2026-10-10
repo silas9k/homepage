@@ -1,8 +1,10 @@
 import { MdRefresh } from "react-icons/md";
 
+import { authenticatedFetch } from "utils/auth/client";
+
 export default function Revalidate() {
   const revalidate = () => {
-    fetch("/api/revalidate").then((res) => {
+    authenticatedFetch("/api/revalidate", { method: "POST" }).then((res) => {
       if (res.ok) {
         window.location.reload();
       }

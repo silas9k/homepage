@@ -10,14 +10,20 @@ services:
     env_file:
       - ${HOMEPAGE_ENV_FILE:-.env}
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-localhost:3000,127.0.0.1:3000}
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:-home.silasnet.win,debian-docker.tail277de6.ts.net,localhost:3000,127.0.0.1:3000}
+      HOMEPAGE_AUTH_ORIGINS: ${HOMEPAGE_AUTH_ORIGINS:-https://home.silasnet.win,https://debian-docker.tail277de6.ts.net}
       TZ: ${TZ:-Europe/Berlin}
       LOG_TARGETS: stdout
       NEXT_TELEMETRY_DISABLED: "1"
+      HOMEPAGE_AUTH_DB: /app/data/auth/auth.sqlite
     ports:
-      - "${HOMEPAGE_BIND:-127.0.0.1}:${HOMEPAGE_PORT:-3000}:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ${HOMEPAGE_CONFIG_PATH:-./config}:/app/config:ro
+      - homepage-auth:/app/data/auth
     tmpfs:
       - /tmp:size=64m,mode=1777
     cap_drop: [ALL]
@@ -30,3 +36,6 @@ services:
       options:
         max-size: 10m
         max-file: "3"
+
+volumes:
+  homepage-auth:

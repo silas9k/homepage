@@ -1,9 +1,9 @@
-import { SessionProvider } from "next-auth/react";
 import { appWithTranslation } from "next-i18next/pages";
 import Head from "next/head";
 import "styles/globals.css";
 import "styles/manrope.css";
 import "styles/plex-mono.css";
+import "styles/silas-auth.css";
 import "styles/silas-overview.css";
 import "styles/theme.css";
 import { SWRConfig } from "swr";
@@ -73,11 +73,19 @@ const tailwindSafelist = [
 ];
 
 function MyApp({ Component, pageProps }) {
+  if (pageProps.publicLogin) return <Component {...pageProps} />;
   return (
-    <SessionProvider session={pageProps.session}>
+    <>
       <SWRConfig
         value={{
-          fetcher: (resource, init) => fetch(resource, init).then((res) => res.json()),
+          fetcher: async (resource, init) => {
+            const response = await fetch(resource, init);
+            if (response.status === 401) {
+              window.location.replace(new URL("/auth/signin", window.location.origin).href);
+              throw new Error("Session expired");
+            }
+            return response.json();
+          },
         }}
       >
         <Head>
@@ -94,7 +102,7 @@ function MyApp({ Component, pageProps }) {
           </ThemeProvider>
         </ColorProvider>
       </SWRConfig>
-    </SessionProvider>
+    </>
   );
 }
 

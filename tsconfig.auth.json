@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "paths": { "utils/*": ["./src/utils/*"] }
+  },
+  "include": ["src/utils/auth/*.js", "src/utils/auth/store.cjs", "src/proxy.js", "src/pages/api/auth/*.js"],
+  "exclude": ["**/*.test.js"]
+}

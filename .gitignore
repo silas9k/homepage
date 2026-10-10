@@ -54,6 +54,10 @@ next-env.d.ts
 /.local-references/
 /.local-tools/
 /artifacts/
+/data/auth/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 /playwright-report/
 /test-results/
 /AGENTS.md

@@ -1,14 +1,17 @@
 # Zugriff und Geheimnisse
 
+Die Anwendung verlangt jetzt immer eine lokale Anmeldung mit serverseitigen SQLite-Sessions. Einrichtung, Bootstrap, HTTPS-Origins, Passwort-Reset und Persistenz: [AUTHENTICATION.md](AUTHENTICATION.md). Alle Daten-/API-Endpunkte prüfen die Session auch im Handler. Produktive Browserzugriffe benötigen HTTPS; reine HTTP-SSH-Portweiterleitung ist nur für den Entwicklungsserver geeignet. Cloudflare Access kann später als zusätzliche Schicht verwendet werden.
+
+
 Homepage läuft ausschließlich in `debian-docker`, niemals als Dienst auf dem Proxmox-Host. Dieses Compose richtet weder Tunnel noch öffentliche DNS-Einträge ein. Homepage-Links sind keine Authentifizierung. Ein erlaubt gesetzter Host ist ebenfalls keine Zugangskontrolle.
 
 ## Privater Zugriff
 
-Der Standard bindet an Loopback. SSH-Portweiterleitung ist in der README beschrieben. Für Tailscale kann der Port gezielt an die Tailscale-IP der VM gebunden werden; die Tailnet-ACL muss den Zugriff auf die eigenen Geräte beschränken. `tailscale serve` auf der VM kann alternativ einen HTTPS-Endpunkt zum Loopback-Port bereitstellen. Niemals `tailscale funnel` für dieses Dashboard aktivieren. Für direkten LAN-Zugriff die VM-IP binden und Zugriffe zusätzlich mit der vorhandenen Firewall einschränken; Docker-Portfreigaben können einfache UFW-Regeln umgehen.
+Compose veröffentlicht fest `127.0.0.1:3000`; keine direkte LAN-/Tailscale-Portfreigabe. Der bestehende HTTPS-Endpunkt `https://debian-docker.tail277de6.ts.net` über Tailscale Serve und später der hostlokale Cloudflare Tunnel sind die vorgesehenen Zugangswege. Die Tailnet-ACL auf eigene Geräte beschränken. Niemals `tailscale funnel` aktivieren. Docker-Portfreigaben können einfache UFW-Regeln umgehen, deshalb bleibt die Host-Bindung auf Loopback. Siehe [Produktionsanleitung und Rollback](PRODUCTION_RUNBOOK.md) und [Release-Gate](PRODUCTION_SECURITY_AUDIT.md).
 
 ## Cloudflare Access
 
-Nur bei ausdrücklich gewünschter Freigabe einen Host wie `home.silasnet.win` verwenden. Zuerst eine Cloudflare-Access-Anwendung mit einer auf die eigene Identität beschränkten Allow-Regel anlegen und den Login testen. Dann die Tunnelroute zum Dashboard einrichten. Keine Bypass-Regel für `/api/` setzen: APIs enthalten ebenfalls private Homelab-Daten. Caching für den gesamten Dashboard-Host deaktivieren. Bei cloudflared auf dem VM-Host kann das Ziel `http://127.0.0.1:3000` sein. Bei cloudflared in einem Container bedeutet `localhost` dessen eigenen Container; dann ein privates gemeinsames Docker-Netz mit dem Ziel `http://homepage:3000` verwenden und den Hostport entfernen. Tunnel-Management-API-Token und Tunnel-Connector-Token sind verschiedene Geheimnisse.
+Für die geplante Freigabe exakt `home.silasnet.win` verwenden. Die Tunnelroute zunächst nur vorbereiten, dann die auf die eigene Identität beschränkte Access-Anwendung einrichten und prüfen, erst danach die öffentliche Route aktivieren. Keine Bypass-Regel für `/api/` oder Health setzen. Caching nur für diesen Dashboard-Host deaktivieren. Das Ziel bleibt `http://127.0.0.1:3000`; cloudflared muss deshalb im Netzwerk-Namespace des VM-Hosts laufen. Bei einem Bridge-Container bedeutet `localhost` dessen eigenen Container: In diesem Fall stoppen und die Architektur separat planen, weder die Homepage-Bindung erweitern noch andere Dienste ändern. Tunnel-Management-API-Token und Tunnel-Connector-Token sind verschiedene Geheimnisse. Homepage-Anmeldung und Access bleiben unabhängig aktiv.
 
 `HOMEPAGE_ALLOWED_HOSTS` muss exakt die aufgerufenen Hosts enthalten, beispielsweise `home.silasnet.win,localhost:3000,127.0.0.1:3000`. Kein Protokoll, Pfad oder `*`.
 

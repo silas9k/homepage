@@ -18,7 +18,7 @@ describe("components/toggles/revalidate", () => {
     // allow promise chain to flush
     await Promise.resolve();
 
-    expect(fetchSpy).toHaveBeenCalledWith("/api/revalidate");
+    expect(fetchSpy).toHaveBeenCalledWith("/api/revalidate", { method: "POST" });
     expect(reload).toHaveBeenCalledTimes(1);
 
     fetchSpy.mockRestore();

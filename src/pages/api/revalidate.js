@@ -1,8 +1,7 @@
-export default async function handler(req, res) {
-  try {
-    await res.revalidate("/");
-    return res.json({ revalidated: true });
-  } catch (err) {
-    return res.status(500).send("Error revalidating");
-  }
-}
+import { withAuth } from "utils/auth/http";
+
+// Dashboard data is rendered on each request; no public static snapshot remains.
+export default withAuth((req, res) => {
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).end(); }
+  return res.json({ revalidated: true });
+});

@@ -1,5 +1,6 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import prettierConfig from "eslint-config-prettier/flat";
+import importPlugin from "eslint-plugin-import";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
@@ -7,9 +8,10 @@ export default defineConfig([
   prettierConfig,
   {
     files: ["**/*.{js,mjs,cjs,jsx}"],
+    plugins: { import: importPlugin },
 
     languageOptions: {
-      ecmaVersion: 6,
+      ecmaVersion: 2022,
       sourceType: "module",
 
       parserOptions: {
@@ -32,6 +34,7 @@ export default defineConfig([
         "error",
         {
           maxDepth: 1,
+          ignoreExternal: true,
         },
       ],
 

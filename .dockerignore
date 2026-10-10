@@ -28,6 +28,10 @@ k3d/
 .local-references/
 .local-tools/
 artifacts/
+data/auth/
+**/*.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
 coverage/
 **/.env.*
 **/*.pem

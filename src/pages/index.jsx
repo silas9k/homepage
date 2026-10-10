@@ -9,6 +9,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { BiError } from "react-icons/bi";
 import useSWR, { SWRConfig } from "swr";
 
+import { authenticatedFetch } from "utils/auth/client";
 import BookmarksGroup from "components/bookmarks/group";
 import ErrorBoundary from "components/errorboundry";
 import QuickLaunch from "components/quicklaunch";
@@ -21,6 +22,7 @@ import SystemOverview from "components/silas/system-overview";
 import Tab, { slugifyAndEncode } from "components/tab";
 import Revalidate from "components/toggles/revalidate";
 import Widget from "components/widgets/widget";
+import { requirePageSession } from "utils/auth/http";
 import { bookmarksResponse, servicesResponse, widgetsResponse } from "utils/config/api-response";
 import { getSettings } from "utils/config/config";
 import { ColorContext } from "utils/contexts/color";
@@ -39,9 +41,7 @@ const ColorToggle = dynamic(() => import("components/toggles/color"), {
   ssr: false,
 });
 
-const SignOut = dynamic(() => import("components/toggles/signout"), {
-  ssr: false,
-});
+const SignOut = dynamic(() => import("components/toggles/signout"), { ssr: false });
 
 const Version = dynamic(() => import("components/version"), {
   ssr: false,
@@ -60,7 +60,9 @@ const normalizeLanguage = (language) => {
   return alias || language;
 };
 
-export async function getStaticProps() {
+export async function getServerSideProps(context) {
+  const denied = requirePageSession(context);
+  if (denied) return denied;
   let logger;
   try {
     logger = createLogger("index");
@@ -121,7 +123,7 @@ function Index({ initialSettings, fallback }) {
       setStale(true);
       localStorage.setItem("hash", hashData.hash);
 
-      fetch("/api/revalidate").then((res) => {
+      authenticatedFetch("/api/revalidate", { method: "POST" }).then((res) => {
         if (res.ok) {
           window.location.reload();
         }

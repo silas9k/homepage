@@ -1,7 +1,11 @@
+import { requirePageSession } from "utils/auth/http";
 import checkAndCopyConfig, { getSettings } from "utils/config/config";
 import themes from "utils/styles/themes";
 
-export async function getServerSideProps({ res }) {
+export async function getServerSideProps(context) {
+  const denied = requirePageSession(context);
+  if (denied) return denied;
+  const { res } = context;
   checkAndCopyConfig("settings.yaml");
   const settings = getSettings();
 

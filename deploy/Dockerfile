@@ -15,6 +15,10 @@ LABEL org.opencontainers.image.title="silasnet. Homepage" \
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/scripts/auth-admin.cjs ./scripts/auth-admin.cjs
+COPY --from=builder --chown=node:node /app/scripts/auth-backup.cjs ./scripts/auth-backup.cjs
+COPY --from=builder --chown=node:node /app/src/utils/auth/store.cjs ./src/utils/auth/store.cjs
+RUN mkdir -p /app/data/auth && chown node:node /app/data/auth && chmod 700 /app/data/auth
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \

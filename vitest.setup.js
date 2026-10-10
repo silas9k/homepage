@@ -8,9 +8,15 @@ afterEach(() => {
   if (typeof document !== "undefined") cleanup();
 });
 
-// Avoid NextAuth client-side fetches during unit tests.
-vi.mock("next-auth/react", () => ({
-  SessionProvider: ({ children }) => children ?? null,
+// Legacy handler/component tests exercise business logic with the auth boundary
+// stubbed. Dedicated auth integration tests explicitly unmock this module and
+// use the real SQLite store; production E2E tests exercise every HTTP route.
+vi.mock("utils/auth/http", () => ({
+  withAuth: (handler) => handler,
+  requirePageSession: () => null,
+}));
+vi.mock("utils/auth/client", () => ({
+  authenticatedFetch: (url, init) => fetch(url, init),
 }));
 
 // implement a couple of common formatters mocked in next-i18next
