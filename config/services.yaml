@@ -160,7 +160,7 @@
           site: a
           host: debian-docker
     - SilasSend:
-        icon: mdi-send
+        icon: /silas/icons/silassend.svg
         description: Dateien sicher teilen
         href: "{{HOMEPAGE_VAR_SILASSEND_URL}}"
         siteMonitor: "{{HOMEPAGE_VAR_SILASSEND_HEALTH_URL}}"
